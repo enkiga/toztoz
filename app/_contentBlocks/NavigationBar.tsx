@@ -44,17 +44,13 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import {
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Props = {};
 
 const NavigationBar = ({}: Props) => {
   return (
-    <section className="w-full h-fit py-3 md:py-0 md:h-20 bg-gray-50 border-b">
+    <section className="w-full h-fit py-3 md:py-0 md:h-20 bg-gray-50 border-b fixed top-0 z-50">
       {/* Top Section: Logo, hyperlinks, Search, Cart & User Profile */}
       <div className="flex w-11/12 mx-auto h-full md:h-1/2 flex-row items-center justify-between">
         {/* Logo */}
