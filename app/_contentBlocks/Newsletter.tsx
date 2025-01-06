@@ -14,7 +14,7 @@ const Newsletter = ({}: Props) => {
           alt="Newsletter"
           width={1000}
           height={1000}
-          className="object-cover object-center"
+          className="object-cover object-center w-full"
         />
       </div>
       <div className="w-full md:w-1/2 flex flex-col items-start justify-between p-10">
@@ -27,7 +27,7 @@ const Newsletter = ({}: Props) => {
           sales, products and more
         </p>
         </div>
-        <div className="flex w-full max-w-sm items-center space-x-2">
+        <div className="flex w-full max-w-sm my-4 md:my-0 items-center space-x-2">
           <Input type="email" placeholder="Email" />
           <Button type="submit">Subscribe</Button>
         </div>

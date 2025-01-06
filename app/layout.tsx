@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import NavigationBar from "./_contentBlocks/NavigationBar";
+import Footer from "./_contentBlocks/Footer";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body>
         <NavigationBar />
         <main>{children}</main>
+        <Footer />
         <Toaster />
       </body>
     </html>
