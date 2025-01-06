@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-
-
+import NavigationBar from "./_contentBlocks/NavigationBar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -17,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <NavigationBar />
         <main>{children}</main>
         <Toaster />
       </body>
