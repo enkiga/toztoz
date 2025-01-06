@@ -82,7 +82,7 @@ const Footer = ({}: Props) => {
           </h1>
           <div className=" mt-2 flex w-full max-w-sm items-center space-x-2">
             <Input type="email" placeholder="Email" />
-            <Button type="submit">Subscribe</Button>
+            <Button type="submit" variant="secondary">Subscribe</Button>
           </div>
         </div>
       </div>

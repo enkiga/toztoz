@@ -8,7 +8,7 @@ const ProductListing = (props: Props) => {
   return (
     <section className="w-11/12 mx-auto flex flex-col py-20">
       <h1 className="text-2xl font-semibold">Top Products</h1>
-      {/* Listing top 4 products */}
+      {/* Listing top 8 products */}
       <div className="my-4 flex flex-wrap">
         <ProductCard
           Img="/CoffeeTable.png"
