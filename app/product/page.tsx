@@ -19,11 +19,12 @@ const ProductPage = (props: Props) => {
             width={1000}
             height={1000}
             className="object-cover object-center w-full"
+            priority
           />
         </div>
 
         {/* Details, Quantity  & Buttons */}
-        <div className="w-full md:w-1/2 flex flex-col items-start p-10">
+        <div className="w-full md:w-1/2 flex flex-col items-start py-5 md:p-10">
           {/* Product Name & Price */}
           <div className="pb-4 border-b w-full">
             <h1 className="text-4xl font-semibold">Coffee Table</h1>
@@ -44,24 +45,22 @@ const ProductPage = (props: Props) => {
           <div className="pt-4">
             <h1>Quantity</h1>
             <div className="flex items-center space-x-2 mt-4">
-              <button className="bg-gray-200 w-10 h-10 flex items-center justify-center">
-                -
-              </button>
-              <p className="w-5 text-center">1</p>
-              <button className="bg-gray-200 w-10 h-10 flex items-center justify-center">
-                +
-              </button>
+              <Button>-</Button>
+              <p className="w-10 p-2 rounded-lg text-center bg-white">1</p>
+              <Button>+</Button>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="w-full flex space-x-2 mt-5">
-            <button className="w-full bg-purple-900 text-gray-50 py-3 mt-4">
-              Add to Cart
-            </button>
-            <button className="w-full bg-gray-50 text-gray-900 py-3 mt-4">
+          <div className="w-full flex flex-col md:flex-row md:space-x-2 mt-5">
+            <Button className="w-full mt-4" size="lg">Add to Cart</Button>
+            <Button
+              className="w-full mt-4"
+              variant="outline"
+              size="lg"
+            >
               Save to Wishlist
-            </button>
+            </Button>
           </div>
         </div>
       </div>

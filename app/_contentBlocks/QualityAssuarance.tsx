@@ -5,7 +5,7 @@ type Props = {};
 
 const QualityAssuarance = (props: Props) => {
   return (
-    <section className="w-full px-3 md:w-5/6 flex flex-col items-center justify-center mx-auto md:my-6">
+    <section className="w-full px-3 md:w-5/6 flex flex-col items-center justify-center mx-auto my-6">
       <h1 className="text-xl md:text-2xl font-semibold">
         {" "}
         What Makes our brand different

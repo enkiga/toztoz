@@ -51,7 +51,7 @@ const ProductListing = (props: Props) => {
           Price="5,000"
         />
       </div>
-      <Button className="md:w-fit mx-auto">View Products</Button>
+      <Button className="md:w-fit mx-auto" size="lg">Explore more products</Button>
     </section>
   );
 };
