@@ -14,7 +14,11 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -83,8 +87,9 @@ const NavigationBar = ({}: Props) => {
           </div>
 
           {/* Bar Icon for Mobile View */}
-          <div className="block md:hidden">
-            <AlignJustifyIcon size={16} />
+          <div className="flex flex-row gap-4 md:hidden">
+            <Search />
+            <MobileNav />
           </div>
         </div>
       </div>
@@ -112,8 +117,6 @@ const NavigationBar = ({}: Props) => {
           </li>
         </ul>
       </div>
-
-      {/* Mobile View */}
     </section>
   );
 };
@@ -240,5 +243,64 @@ const Search = () => {
         </CommandList>
       </CommandDialog>
     </>
+  );
+};
+
+// Mobile Nav View
+const MobileNav = () => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <AlignJustifyIcon size={16} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-52">
+        {/* Grouping */}
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <Link href="/profile">Profile</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/cart">Cart (1)</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/orders">Orders</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/wishlist">Wishlist</Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <Link href="/about">About Us</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Categories</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem>
+                  <Link href="/category">Shoes</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/category">Shirts</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/category">More ...</Link>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+          <DropdownMenuItem>
+            <Link href="/contact">Contact</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/blog">Blog</Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-red-500">Log out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
