@@ -1,12 +1,56 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
-import { SearchIcon, ShoppingBasketIcon, User2Icon } from "lucide-react";
+import {
+  AlignJustifyIcon,
+  SearchIcon,
+  ShoppingBasketIcon,
+  User2Icon,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command";
+import {
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Props = {};
 
 const NavigationBar = ({}: Props) => {
   return (
-    <section className="w-full h-32 bg-gray-50">
+    <section className="w-full h-fit py-3 md:py-0 md:h-20 bg-gray-50 border-b">
       {/* Top Section: Logo, hyperlinks, Search, Cart & User Profile */}
       <div className="flex w-11/12 mx-auto h-full md:h-1/2 flex-row items-center justify-between">
         {/* Logo */}
@@ -18,7 +62,7 @@ const NavigationBar = ({}: Props) => {
         {/* Hyperlinks, Search, Cart & User Profile */}
         <div className="flex flex-row items-center gap-6 ">
           {/* Hyperlinks */}
-          <div>
+          <div className="hidden md:flex">
             <ul className="flex flex-row items-center gap-3">
               <li>
                 <Link href="/about">About Us</Link>
@@ -32,10 +76,15 @@ const NavigationBar = ({}: Props) => {
             </ul>
           </div>
           {/* Search, Cart & User Profile */}
-          <div className=" flex flex-row items-center gap-3">
-            <SearchIcon size={16} />
-            <ShoppingBasketIcon size={16} />
-            <User2Icon size={16} />
+          <div className="hidden md:flex flex-row items-center gap-3">
+            <Search />
+            <Cart />
+            <UserProfile />
+          </div>
+
+          {/* Bar Icon for Mobile View */}
+          <div className="block md:hidden">
+            <AlignJustifyIcon size={16} />
           </div>
         </div>
       </div>
@@ -70,3 +119,126 @@ const NavigationBar = ({}: Props) => {
 };
 
 export default NavigationBar;
+
+// User Profile View
+const UserProfile = () => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <User2Icon size={16} />
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent className="w-48">
+        {/* Label */}
+        <DropdownMenuLabel> My Account</DropdownMenuLabel>
+
+        <DropdownMenuSeparator />
+
+        {/* Group: Profile, Orders & WishList  */}
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <Link href="/profile">Profile</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/orders">Orders</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/wishlist">Wishlist</Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-red-500">Log out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+// Cart View
+const Cart = () => {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <div className="relative">
+          <p className="absolute -top-3 -right-2 text-xs bg-purple-700 text-white rounded-full px-1">
+            1
+          </p>
+          <ShoppingBasketIcon size={16} />
+        </div>
+      </SheetTrigger>
+
+      <SheetContent className="w-96">
+        <SheetHeader>
+          <SheetTitle>Your Cart (1 Item)</SheetTitle>
+          <SheetDescription>These are the items in your cart</SheetDescription>
+        </SheetHeader>
+        {/* Items Selected */}
+        <div className="flex flex-col gap-3 py-4">
+          <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-row items-center gap-3">
+              <img
+                src="https://via.placeholder.com/150"
+                alt="product"
+                className="w-16 h-16"
+              />
+              <div>
+                <p>Product Name</p>
+                <p>Price</p>
+              </div>
+            </div>
+            <div>
+              <p>Qty</p>
+            </div>
+          </div>
+        </div>
+
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button>View Cart</Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+// Search View
+const Search = () => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  //   Set isOpen to true when the SearchIcon is clicked
+
+  return (
+    <>
+      <SearchIcon size={16} onClick={() => setIsOpen(true)} />
+
+      <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogHeader>
+          <DialogTitle></DialogTitle>
+        </DialogHeader>
+        <CommandInput placeholder="Type to search..." />
+        <CommandList>
+          <CommandEmpty>No Result Found</CommandEmpty>
+
+          <CommandSeparator />
+
+          <CommandGroup heading="Categories">
+            <CommandItem>Shoes</CommandItem>
+            <CommandItem>Shirts</CommandItem>
+            <CommandItem>Pants</CommandItem>
+          </CommandGroup>
+
+          <CommandSeparator />
+
+          <CommandGroup heading="Products">
+            <CommandItem>Product 1</CommandItem>
+            <CommandItem>Product 2</CommandItem>
+            <CommandItem>Product 3</CommandItem>
+          </CommandGroup>
+
+          <CommandSeparator />
+        </CommandList>
+      </CommandDialog>
+    </>
+  );
+};
