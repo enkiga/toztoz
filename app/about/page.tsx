@@ -8,7 +8,7 @@ type Props = {};
 
 const AboutUs = (props: Props) => {
   return (
-    <section className="w-full min-h-screen pt-20">
+    <section className="w-full md:min-h-screen pt-20">
       {/* Title */}
       <h1 className="md:text-center text-3xl font-base text-wrap px-10 md:px-0 md:w-1/2 mx-auto">
         A brand built on the love of comfort, quality, and outsanding customer
