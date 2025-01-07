@@ -16,15 +16,15 @@ type Props = {};
 
 const CartPage = ({}: Props) => {
   return (
-    <section className="w-full min-h-screen pt-20">
+    <section className="w-full md:min-h-screen pt-20">
       <div className="w-11/12 mx-auto flex flex-col">
         <h1 className="font-semibold text-2xl mt-10">Your shopping cart (2)</h1>
         {/* Table for Cart Products */}
         <Table className="w-full mt-10">
           <TableCaption className="text-right my-10">
-            <div className="">
+            <div className="flex md:flex-col flex-col-reverse items-end gap-5 md:gap-0">
                 <p>Taxes and shipping are calculated at checkout</p>
-                <Button size="lg" className="mt-2">Go to checkout</Button>
+                <Button size="lg" className="mt-2 w-fit">Go to checkout</Button>
             </div>
           </TableCaption>
           <TableHeader>
