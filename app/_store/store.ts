@@ -24,15 +24,15 @@ interface Product {
 
 interface Category {
   id: string;
-  categoryname: string;
+  categoryName: string;
   categorySlug: string;
 }
 
 interface storeState {
   products: Product[];
   categories: Category[];
-  fetchProducts: () => Promise<void>;
-  fetchCategories: () => Promise<void>;
+  fetchProducts: () => Promise<Product[]>;
+  fetchCategories: () => Promise<Category[]>;
 }
 
 const useStore = create<storeState>((set) => ({
@@ -63,6 +63,7 @@ const useStore = create<storeState>((set) => ({
       `
     );
     set({ products });
+    return products;
   },
 
   fetchCategories: async () => {
@@ -79,6 +80,7 @@ const useStore = create<storeState>((set) => ({
       `
     );
     set({ categories });
+    return categories;
   },
 }));
 

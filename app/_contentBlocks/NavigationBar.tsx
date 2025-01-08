@@ -45,14 +45,39 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
-type Props = {};
+import { useStore } from "../_store/store";
+import { useQuery } from "@tanstack/react-query";
 
-const NavigationBar = ({}: Props) => {
+interface Categories {
+  id: string;
+  categoryName: string;
+  categorySlug: string;
+}
+
+const NavigationBar = () => {
+  const { fetchCategories } = useStore();
+
+  // Fetch Categories
+  const query = useQuery<Categories[]>({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
+
   return (
-    <section className="w-full h-fit py-3 md:py-0 md:h-20 bg-gray-50 border-b fixed top-0 z-50">
-      {/* Top Section: Logo, hyperlinks, Search, Cart & User Profile */}
-      <div className="flex w-11/12 mx-auto h-full md:h-1/2 flex-row items-center justify-between">
+    <section className="w-full bg-background py-3 md:py-1  border-b fixed top-0 z-50">
+      {/* Top Section: Banner */}
+      {/* Bottom Section: Logo, hyperlinks, Search, Cart & User Profile */}
+      <div className="flex w-11/12 mx-auto py-1 flex-row items-center justify-between">
         {/* Logo */}
         <div className="">
           <Link href="/" className="font-semibold text-2xl">
@@ -61,20 +86,42 @@ const NavigationBar = ({}: Props) => {
         </div>
         {/* Hyperlinks, Search, Cart & User Profile */}
         <div className="flex flex-row items-center gap-6 ">
-          {/* Hyperlinks */}
-          <div className="hidden md:flex">
-            <ul className="flex flex-row items-center gap-3">
-              <li>
-                <Link href="/about">About Us</Link>
-              </li>
-              <li>
-                <Link href="/contact">Contact</Link>
-              </li>
-              <li>
-                <Link href="/blog">Blog</Link>
-              </li>
-            </ul>
-          </div>
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="w-[200px] flex flex-col bg-background">
+                    <li className="px-4 py-2 hover:bg-gray-200">
+                      <Link href="/shop">All Products</Link>
+                    </li>
+                    {query.data?.map((category) => (
+                      <li
+                        key={category.id}
+                        className="px-4 py-2 hover:bg-gray-200"
+                      >
+                        <Link href="/category">{category.categoryName}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/about" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    About Us
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/contact" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Contact
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
           {/* Search, Cart & User Profile */}
           <div className="hidden md:flex flex-row items-center gap-3">
             <Search />
@@ -85,33 +132,9 @@ const NavigationBar = ({}: Props) => {
           {/* Bar Icon for Mobile View */}
           <div className="flex flex-row gap-4 md:hidden">
             <Search />
-            <MobileNav />
+            <MobileNav query={query} />
           </div>
         </div>
-      </div>
-
-      {/* Bottom Section: Categories Hyperlink */}
-      <div className="w-full bg-background hidden md:flex h-1/2">
-        <ul className="w-full flex flex-row items-center justify-center gap-6">
-          <li>
-            <Link href="/category">Shoes</Link>
-          </li>
-          <li>
-            <Link href="/category">Shoes</Link>
-          </li>
-          <li>
-            <Link href="/category">Shoes</Link>
-          </li>
-          <li>
-            <Link href="/category">Shoes</Link>
-          </li>
-          <li>
-            <Link href="/category">Shoes</Link>
-          </li>
-          <li>
-            <Link href="/category">Shoes</Link>
-          </li>
-        </ul>
       </div>
     </section>
   );
@@ -243,7 +266,11 @@ const Search = () => {
 };
 
 // Mobile Nav View
-const MobileNav = () => {
+const MobileNav = ({
+  query,
+}: {
+  query: ReturnType<typeof useQuery<Categories[]>>;
+}) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -275,14 +302,13 @@ const MobileNav = () => {
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuItem>
-                  <Link href="/category">Shoes</Link>
+                  <Link href="/shop">All Products</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link href="/category">Shirts</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link href="/category">More ...</Link>
-                </DropdownMenuItem>
+                {query.data?.map((category: Categories) => (
+                  <DropdownMenuItem key={category.id}>
+                    <Link href="/shop">{category.categoryName}</Link>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>
