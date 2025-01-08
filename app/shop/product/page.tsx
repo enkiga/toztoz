@@ -1,8 +1,8 @@
 import React from "react";
 import Image from "next/image";
-import ProductCard from "../_contentBlocks/ProductCard";
+import ProductCard from "../../_contentBlocks/ProductCard";
 import { Button } from "@/components/ui/button";
-import QualityAssuarance from "../_contentBlocks/QualityAssuarance";
+import QualityAssuarance from "../../_contentBlocks/QualityAssuarance";
 
 type Props = {};
 
