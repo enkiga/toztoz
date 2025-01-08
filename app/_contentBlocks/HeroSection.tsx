@@ -17,7 +17,7 @@ const HeroSection = ({}: Props) => {
           Shop the new collection of handcrafted items.{" "}
         </p>
 
-        <Button className="mt-10 md:w-fit" size='lg'>Explore the products</Button>
+        <Button className="mt-10 md:w-fit" size='lg'>Explore our products</Button>
       </div>
       <Image
           src="https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
