@@ -236,7 +236,7 @@ const Search = () => {
 
       <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogHeader>
-          <DialogTitle></DialogTitle>
+          <DialogTitle aria-describedby="search-title"></DialogTitle>
         </DialogHeader>
         <CommandInput placeholder="Type to search..." />
         <CommandList>

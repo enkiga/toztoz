@@ -12,9 +12,9 @@ if (!MASTER_URL) {
 
 interface Product {
   id: string;
-  productname: string;
+  productName: string;
   productPrice: number;
-  productImage: string;
+  productImage: any;
   productDescription: string;
   productQuantity: number;
   productSlug: string;
@@ -32,6 +32,7 @@ interface storeState {
   products: Product[];
   categories: Category[];
   fetchProducts: () => Promise<Product[]>;
+  fetchProductPreview: (count: number) => Promise<Product[]>;
   fetchCategories: () => Promise<Category[]>;
 }
 
@@ -58,6 +59,26 @@ const useStore = create<storeState>((set) => ({
             category {
               categoryName
             }
+          }
+        }
+      `
+    );
+    set({ products });
+    return products;
+  },
+
+  fetchProductPreview: async (count: number) => {
+    const { products } = await request<{ products: Product[] }>(
+      MASTER_URL,
+      gql`
+        query MyQuery {
+          products(first: ${count}) {
+            productImage {
+              url
+            }
+            productName
+            productPrice
+            productSlug
           }
         }
       `
