@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import NavigationBar from "./_contentBlocks/NavigationBar";
 import Footer from "./_contentBlocks/Footer";
+import { TanstackQueryProvider } from "./_providers/TanstackQueryProvider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -17,10 +18,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <NavigationBar />
-        <main>{children}</main>
-        <Footer />
-        <Toaster />
+        <TanstackQueryProvider>
+          <NavigationBar />
+          <main>{children}</main>
+          <Footer />
+          <Toaster />
+        </TanstackQueryProvider>
       </body>
     </html>
   );
