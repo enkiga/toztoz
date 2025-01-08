@@ -6,19 +6,32 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 type Props = {
   key: string;
   Img: string;
   Name: string;
   Price: string;
+  slug: string;
+  category: string;
 };
 
-const ProductCard = ({ key, Img, Name, Price }: Props) => {
+const ProductCard = ({ key, Img, Name, Price, category, slug }: Props) => {
+  const router = useRouter();
+
+  const onClick = (categorySlug: string, productSlug: string) => {
+    // Change the route to the product detail page
+    console.log("Clicked");
+
+    // Redirect to the product detail page
+    router.push(`/${categorySlug}/${productSlug}`);
+  };
   return (
     <div
       key={key}
       className="w-1/2 md:w-1/4 px-2 py-4 flex flex-col items-start hover:scale-105 transition-transform duration-300"
+      onClick={() => onClick(category, slug)}
     >
       <Image
         src={Img}

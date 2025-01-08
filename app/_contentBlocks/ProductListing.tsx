@@ -6,12 +6,14 @@ import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStore } from "../_store/store";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 interface Products {
   id: string;
   productName: string;
   productPrice: number;
-  productImage: any;
+  productImage: [{ url: string }];
+  category: [{ categorySlug: string }];
   productSlug: string;
 }
 
@@ -23,6 +25,8 @@ const ProductListing = () => {
     queryKey: ["products"],
     queryFn: () => fetchProductPreview(8),
   });
+
+  const router = useRouter();
 
   // Get Price then convert to string while adding the comma separator
   const formatPrice = (price: number) => {
@@ -41,10 +45,10 @@ const ProductListing = () => {
                 className="w-1/2 md:w-1/4 px-2 py-4 flex flex-col items-start"
               >
                 <div className="flex flex-col space-y-3">
-                  <Skeleton className=" bg-gray-50 w-full h-48 rounded-t-sm" />
+                  <Skeleton className=" bg-white w-full h-48 rounded-t-sm" />
                   <div className="space-y-2">
-                    <Skeleton className="bg-gray-50 h-4 w-2/3" />
-                    <Skeleton className="bg-gray-50 h-4 w-1/3" />
+                    <Skeleton className=" bg-white h-4 w-2/3" />
+                    <Skeleton className="bg-white h-4 w-1/3" />
                   </div>
                 </div>
               </div>
@@ -52,13 +56,19 @@ const ProductListing = () => {
           : data?.map((product) => (
               <ProductCard
                 key={product.id}
+                slug={product.productSlug}
+                category={product.category[0].categorySlug}
                 Img={product.productImage[0].url}
                 Name={product.productName}
                 Price={formatPrice(product.productPrice)}
               />
             ))}
       </div>
-      <Button className="md:w-fit mx-auto" size="lg">
+      <Button
+        className="md:w-fit mx-auto"
+        size="lg"
+        onClick={() => router.push("/all-products")}
+      >
         Explore more products
       </Button>
     </section>

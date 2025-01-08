@@ -14,12 +14,12 @@ interface Product {
   id: string;
   productName: string;
   productPrice: number;
-  productImage: any;
+  productImage: [{ url: string }];
   productDescription: string;
   productQuantity: number;
   productSlug: string;
   productStatus: string;
-  category: string;
+  category: [{ categoryName: string; categorySlug: string }];
 }
 
 interface Category {
@@ -33,6 +33,7 @@ interface storeState {
   categories: Category[];
   fetchProducts: () => Promise<Product[]>;
   fetchProductPreview: (count: number) => Promise<Product[]>;
+  fetchProductByCategory: (categorySlug: string) => Promise<Product[]>;
   fetchCategories: () => Promise<Category[]>;
 }
 
@@ -79,6 +80,9 @@ const useStore = create<storeState>((set) => ({
             productName
             productPrice
             productSlug
+            category {
+              categorySlug
+            }
           }
         }
       `
@@ -102,6 +106,30 @@ const useStore = create<storeState>((set) => ({
     );
     set({ categories });
     return categories;
+  },
+
+  fetchProductByCategory: async (categorySlug: string) => {
+    const { products } = await request<{ products: Product[] }>(
+      MASTER_URL,
+      gql`
+        query MyQuery {
+          products(where: {category_every: {categorySlug: "${categorySlug}"}}) {
+            productName
+            id
+            productImage {
+              url
+            }
+            productPrice
+            productSlug
+            category {
+              categorySlug
+            }
+          }
+        }
+      `
+    );
+    set({ products });
+    return products;
   },
 }));
 

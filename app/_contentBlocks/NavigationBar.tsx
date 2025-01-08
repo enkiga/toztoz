@@ -93,14 +93,16 @@ const NavigationBar = () => {
                 <NavigationMenuContent>
                   <ul className="w-[200px] flex flex-col bg-background">
                     <li className="px-4 py-2 hover:bg-gray-200">
-                      <Link href="/shop">All Products</Link>
+                      <Link href="/all-products">All Products</Link>
                     </li>
                     {query.data?.map((category) => (
                       <li
                         key={category.id}
                         className="px-4 py-2 hover:bg-gray-200"
                       >
-                        <Link href="/category">{category.categoryName}</Link>
+                        <Link href={`/${category.categorySlug}`}>
+                          {category.categoryName}
+                        </Link>
                       </li>
                     ))}
                   </ul>
