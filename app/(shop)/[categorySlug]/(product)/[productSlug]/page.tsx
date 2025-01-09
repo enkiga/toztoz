@@ -1,8 +1,8 @@
 import React from "react";
 import Image from "next/image";
-import ProductCard from "../../_contentBlocks/ProductCard";
+import ProductCard from "@/app/_contentBlocks/ProductCard";
 import { Button } from "@/components/ui/button";
-import QualityAssuarance from "../../_contentBlocks/QualityAssuarance";
+import QualityAssuarance from "@/app/_contentBlocks/QualityAssuarance";
 
 type Props = {};
 
@@ -53,12 +53,10 @@ const ProductPage = (props: Props) => {
 
           {/* CTA Buttons */}
           <div className="w-full flex flex-col md:flex-row md:space-x-2 mt-5">
-            <Button className="w-full mt-4" size="lg">Add to Cart</Button>
-            <Button
-              className="w-full mt-4"
-              variant="outline"
-              size="lg"
-            >
+            <Button className="w-full mt-4" size="lg">
+              Add to Cart
+            </Button>
+            <Button className="w-full mt-4" variant="outline" size="lg">
               Save to Wishlist
             </Button>
           </div>
@@ -70,7 +68,7 @@ const ProductPage = (props: Props) => {
         <h1 className="text-2xl font-semibold">You might also love these</h1>
         {/* Listing top 4 products */}
         <div className="my-4 flex flex-wrap">
-          <ProductCard
+          {/* <ProductCard
             Img="/CoffeeTable.png"
             Name="Cracken Coffee Table"
             Price="15,000"
@@ -89,7 +87,7 @@ const ProductPage = (props: Props) => {
             Img="/GlassVase.png"
             Name="Marble Glass Vase"
             Price="5,000"
-          />
+          /> */}
         </div>
         {/* CTA button */}
         <Button className="md:w-fit mx-auto">View More</Button>

@@ -9,7 +9,6 @@ import {
 import { useRouter } from "next/navigation";
 
 type Props = {
-  key: string;
   Img: string;
   Name: string;
   Price: string;
@@ -17,7 +16,7 @@ type Props = {
   category: string;
 };
 
-const ProductCard = ({ key, Img, Name, Price, category, slug }: Props) => {
+const ProductCard = ({ Img, Name, Price, category, slug }: Props) => {
   const router = useRouter();
 
   const onClick = (categorySlug: string, productSlug: string) => {
@@ -29,7 +28,6 @@ const ProductCard = ({ key, Img, Name, Price, category, slug }: Props) => {
   };
   return (
     <div
-      key={key}
       className="w-1/2 md:w-1/4 px-2 py-4 flex flex-col items-start hover:scale-105 transition-transform duration-300"
       onClick={() => onClick(category, slug)}
     >

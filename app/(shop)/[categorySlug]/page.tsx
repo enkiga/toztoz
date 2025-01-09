@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
-import ProductCard from "../_contentBlocks/ProductCard";
+import { useParams } from "next/navigation";
+import ProductCard from "@/app/_contentBlocks/ProductCard";
 import {
   Pagination,
   PaginationContent,
@@ -8,26 +11,78 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { useStore } from "@/app/_store/store";
+import { useQuery } from "@tanstack/react-query";
 
+interface Products {
+  id: string;
+  productName: string;
+  productPrice: number;
+  productImage: [{ url: string }];
+  category: [{ categorySlug: string }];
+  productSlug: string;
+}
 
-type Props = {};
+interface Category {
+  id: string;
+  categoryName: string;
+  categorySlug: string;
+}
 
-const ShopListing = ({}: Props) => {
+interface Props {
+  params: Category;
+}
+
+const ShopListing = () => {
+  const { fetchCategories, fetchProducts, fetchProductByCategory } = useStore();
+
+  const params = useParams<{ categorySlug: string }>();
+  const categorySlug = params.categorySlug;
+
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
+
+  const { data, isLoading } = useQuery<Products[]>({
+    // check if categorySlug is all-products tehn fetch all products else not fetch product by category
+    queryKey: ["products", categorySlug],
+    queryFn: () => {
+      if (categorySlug === "all-products") {
+        return fetchProducts();
+      } else {
+        return fetchProductByCategory(categorySlug);
+      }
+    },
+  });
+
+  //   from params.categorySlug, get the category name
+  const category = categories?.find(
+    (category) => category.categorySlug === categorySlug
+  );
+
+  console.log(category?.categoryName);
+
+  // Get Price then convert to string while adding the comma separator
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("en-US");
+  };
+
   return (
     <section className="w-full md:min-h-screen">
       {/* Title header */}
       <div className="relative bg-[url(https://images.unsplash.com/photo-1617784625140-515e220ba148?q=80&w=1634&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] bg-cover bg-center bg-no-repeat w-full h-40 md:h-56">
         <div className="absolute inset-0 bg-purple-800/65"></div>
         <h1 className="absolute bottom-3 left-6 md:left-16 text-4xl text-gray-50 font-bold">
-          All Products
+          {category?.categoryName || "All Products"}
         </h1>
       </div>
 
@@ -61,7 +116,7 @@ const ShopListing = ({}: Props) => {
               </SelectContent>
             </Select>
           </div>
-            
+
           {/* Sorting Filter */}
           <div className="">
             <Select>
@@ -79,76 +134,30 @@ const ShopListing = ({}: Props) => {
 
         {/* Listing */}
         <div className="w-full flex flex-wrap">
-        <ProductCard
-          Img="/CoffeeTable.png"
-          Name="Cracken Coffee Table"
-          Price="15,000"
-        />
-        <ProductCard
-          Img="/GlassVase.png"
-          Name="Marble Glass Vase"
-          Price="5,000"
-        />
-        <ProductCard
-          Img="/CoffeeTable.png"
-          Name="Cracken Coffee Table"
-          Price="15,000"
-        />
-        <ProductCard
-          Img="/GlassVase.png"
-          Name="Marble Glass Vase"
-          Price="5,000"
-        />
-        <ProductCard
-          Img="/CoffeeTable.png"
-          Name="Cracken Coffee Table"
-          Price="15,000"
-        />
-        <ProductCard
-          Img="/GlassVase.png"
-          Name="Marble Glass Vase"
-          Price="5,000"
-        />
-        <ProductCard
-          Img="/CoffeeTable.png"
-          Name="Cracken Coffee Table"
-          Price="15,000"
-        />
-        <ProductCard
-          Img="/GlassVase.png"
-          Name="Marble Glass Vase"
-          Price="5,000"
-        />
-        <ProductCard
-          Img="/CoffeeTable.png"
-          Name="Cracken Coffee Table"
-          Price="15,000"
-        />
-        <ProductCard
-          Img="/GlassVase.png"
-          Name="Marble Glass Vase"
-          Price="5,000"
-        />
-        <ProductCard
-          Img="/CoffeeTable.png"
-          Name="Cracken Coffee Table"
-          Price="15,000"
-        />
-        <ProductCard
-          Img="/GlassVase.png"
-          Name="Marble Glass Vase"
-          Price="5,000"
-        />
+          {isLoading ? (
+            <div className="">Loading ...</div>
+          ) : (
+            data?.map((product) => (
+              <ProductCard
+                key={product.id}
+                slug={product.productSlug}
+                category={product.category[0].categorySlug}
+                Img={product.productImage[0].url}
+                Name={product.productName}
+                Price={formatPrice(product.productPrice)}
+              />
+            ))
+          )}
         </div>
 
         {/* Pagination */}
         <Pagination className="my-10">
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious/>
+              <PaginationPrevious />
             </PaginationItem>
             <PaginationItem>
-              <PaginationLink isActive >1</PaginationLink>
+              <PaginationLink isActive>1</PaginationLink>
             </PaginationItem>
             <PaginationItem>
               <PaginationLink>2</PaginationLink>
@@ -157,10 +166,10 @@ const ShopListing = ({}: Props) => {
               <PaginationLink>3</PaginationLink>
             </PaginationItem>
             <PaginationItem>
-              <PaginationEllipsis/>
+              <PaginationEllipsis />
             </PaginationItem>
             <PaginationItem>
-              <PaginationNext/>
+              <PaginationNext />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

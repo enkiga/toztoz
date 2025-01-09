@@ -50,11 +50,11 @@ const Footer = () => {
             <h1 className="text-xl font-semibold underline mb-1">Categories</h1>
             <ul className="text-sm flex flex-col gap-2">
               <li>
-                <Link href="/shop">All Products</Link>
+                <Link href="/all-products">All Products</Link>
               </li>
               {query.data?.map((category) => (
                 <li key={category.id}>
-                  <Link href={`/category/${category.categorySlug}`}>
+                  <Link href={`/${category.categorySlug}`}>
                     {category.categoryName}
                   </Link>
                 </li>
