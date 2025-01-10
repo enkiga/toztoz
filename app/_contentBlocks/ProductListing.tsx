@@ -17,13 +17,18 @@ interface Products {
   productSlug: string;
 }
 
-const ProductListing = () => {
+interface Props {
+  title: string;
+  count: number;
+}
+
+const ProductListing = ({title, count}: Props) => {
   const { fetchProductPreview } = useStore();
 
   // Fetching first 8 products
   const { data, isLoading } = useQuery<Products[]>({
     queryKey: ["products"],
-    queryFn: () => fetchProductPreview(8),
+    queryFn: () => fetchProductPreview(count),
   });
 
   const router = useRouter();
@@ -35,11 +40,11 @@ const ProductListing = () => {
 
   return (
     <section className="w-11/12 mx-auto flex flex-col py-20">
-      <h1 className="text-2xl font-semibold">Top Products</h1>
+      <h1 className="text-2xl font-semibold">{title}</h1>
       {/* Listing top 8 products */}
       <div className="my-4 flex flex-wrap" data-testid="product-listing">
         {isLoading
-          ? Array.from({ length: 8 }).map((_, index) => (
+          ? Array.from({ length: count }).map((_, index) => (
               <div
                 key={index}
                 className="w-1/2 md:w-1/4 px-2 py-4 flex flex-col items-start"

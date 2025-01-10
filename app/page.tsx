@@ -8,7 +8,7 @@ export default function Home() {
     <div className="pt-20">
       <HeroSection />
       <QualityAssuarance />
-      <ProductListing />
+      <ProductListing title="Top Products" count={8} />
       <Newsletter />
     </div>
   );

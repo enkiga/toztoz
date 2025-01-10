@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import ProductCard from "@/app/_contentBlocks/ProductCard";
 import {
@@ -37,10 +37,6 @@ interface Category {
   categorySlug: string;
 }
 
-interface Props {
-  params: Category;
-}
-
 const ShopListing = () => {
   const { fetchCategories, fetchProducts, fetchProductByCategory } = useStore();
 
@@ -51,6 +47,63 @@ const ShopListing = () => {
     queryKey: ["categories"],
     queryFn: fetchCategories,
   });
+
+  //   from params.categorySlug, get the category name
+  const category = categories?.find(
+    (category) => category.categorySlug === categorySlug
+  );
+
+  // assign filtered products to data based on filters selected
+
+  // Get Price then convert to string while adding the comma separator
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("en-US");
+  };
+
+  // Filtering and Sorting
+  const priceFilter = [
+    { value: "price1", label: "Kes 0 - Kes 1000", min: 0, max: 1000 },
+    { value: "price2", label: "Kes 1001 - Kes 5000", min: 1001, max: 5000 },
+    { value: "price3", label: "Kes 5001 - Kes 10000", min: 5001, max: 10000 },
+    { value: "price4", label: "Kes 10001 - Kes 50000", min: 10001, max: 50000 },
+    {
+      value: "price5",
+      label: "Kes 50001 - Kes 100000",
+      min: 50001,
+      max: 100000,
+    },
+    {
+      value: "price6",
+      label: "Kes 100001 - Kes 500000",
+      min: 100001,
+      max: 500000,
+    },
+  ];
+
+  const sortFilter = [
+    {
+      value: "sort1",
+      label: "Price: Low to High",
+      sortFn: (a: Products, b: Products) => a.productPrice - b.productPrice,
+    },
+    {
+      value: "sort2",
+      label: "Price: High to Low",
+      sortFn: (a: Products, b: Products) => b.productPrice - a.productPrice,
+    },
+    {
+      value: "sort3",
+      label: "Product: A to Z",
+      sortFn: (a: Products, b: Products) =>
+        a.productName.localeCompare(b.productName),
+    },
+    {
+      value: "sort4",
+      label: "Product: Z to A",
+      sortFn: (a: Products, b: Products) =>
+        b.productName.localeCompare(a.productName),
+    },
+  ];
 
   const { data, isLoading } = useQuery<Products[]>({
     // check if categorySlug is all-products tehn fetch all products else not fetch product by category
@@ -63,18 +116,6 @@ const ShopListing = () => {
       }
     },
   });
-
-  //   from params.categorySlug, get the category name
-  const category = categories?.find(
-    (category) => category.categorySlug === categorySlug
-  );
-
-  console.log(category?.categoryName);
-
-  // Get Price then convert to string while adding the comma separator
-  const formatPrice = (price: number) => {
-    return price.toLocaleString("en-US");
-  };
 
   return (
     <section className="w-full md:min-h-screen">
@@ -92,27 +133,17 @@ const ShopListing = () => {
         <div className="w-full flex items-center justify-between my-4">
           {/* Product Filters */}
           <div className="flex space-x-4">
-            {/* Category Filter */}
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="category1">Category 1</SelectItem>
-                <SelectItem value="category2">Category 2</SelectItem>
-                <SelectItem value="category3">Category 3</SelectItem>
-              </SelectContent>
-            </Select>
-
             {/* Price Filter */}
             <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="price1">Kes 0 - Kes 1000</SelectItem>
-                <SelectItem value="price2">Kes 1001 - Kes 5000</SelectItem>
-                <SelectItem value="price3">Kes 5001 - 10000</SelectItem>
+                {priceFilter.map((filter) => (
+                  <SelectItem key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -124,9 +155,11 @@ const ShopListing = () => {
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sort1">Price: Low to High</SelectItem>
-                <SelectItem value="sort2">Price: High to Low</SelectItem>
-                <SelectItem value="sort3">Newest</SelectItem>
+                {sortFilter.map((filter) => (
+                  <SelectItem key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -141,7 +174,7 @@ const ShopListing = () => {
               <ProductCard
                 key={product.id}
                 slug={product.productSlug}
-                category={product.category[0].categorySlug}
+                category={product.category[0].categorySlug || "all-products"}
                 Img={product.productImage[0].url}
                 Name={product.productName}
                 Price={formatPrice(product.productPrice)}

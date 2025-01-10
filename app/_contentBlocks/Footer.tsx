@@ -69,22 +69,22 @@ const Footer = () => {
             </h1>
             <ul className="text-sm flex flex-col gap-2">
               <li>
-                <Link href="/about-us">About Us</Link>
+                <Link href="/about">About Us</Link>
               </li>
               <li>
-                <Link href="/contact-us">Contact Us</Link>
+                <Link href="/contact">Contact Us</Link>
               </li>
               <li>
-                <Link href="/privacy-policy">Privacy Policy</Link>
+                <Link href="#">Privacy Policy</Link>
               </li>
               <li>
-                <Link href="/terms-and-conditions">Terms and Conditions</Link>
+                <Link href="#">Terms and Conditions</Link>
               </li>
               <li>
-                <Link href="/faq">FAQ</Link>
+                <Link href="#">FAQ</Link>
               </li>
               <li>
-                <Link href="/shipping-and-returns">Shipping and Returns</Link>
+                <Link href="#">Shipping and Returns</Link>
               </li>
             </ul>
           </div>

@@ -35,6 +35,7 @@ interface storeState {
   fetchProductPreview: (count: number) => Promise<Product[]>;
   fetchProductByCategory: (categorySlug: string) => Promise<Product[]>;
   fetchCategories: () => Promise<Category[]>;
+  fetchProductBySlug: (productSlug: string) => Promise<Product>;
 }
 
 const useStore = create<storeState>((set) => ({
@@ -46,7 +47,7 @@ const useStore = create<storeState>((set) => ({
       MASTER_URL,
       gql`
         query MyQuery {
-          products {
+          products(first: 12) {
             id
             productDescription
             productImage {
@@ -113,7 +114,7 @@ const useStore = create<storeState>((set) => ({
       MASTER_URL,
       gql`
         query MyQuery {
-          products(where: {category_every: {categorySlug: "${categorySlug}"}}) {
+          products(first: 12, where: {category_every: {categorySlug: "${categorySlug}"}}) {
             productName
             id
             productImage {
@@ -130,6 +131,33 @@ const useStore = create<storeState>((set) => ({
     );
     set({ products });
     return products;
+  },
+
+  fetchProductBySlug: async (productSlug: string) => {
+    const { product } = await request<{ product: Product }>(
+      MASTER_URL,
+      gql`
+        query MyQuery {
+          product(where: {productSlug: "${productSlug}"}) {
+            id
+            productDescription
+            productImage {
+              url
+            }
+            productName
+            productPrice
+            productQuantity
+            productSlug
+            productStatus
+            category {
+              categoryName
+              categorySlug
+            }
+          }
+        }
+      `
+    );
+    return product;
   },
 }));
 

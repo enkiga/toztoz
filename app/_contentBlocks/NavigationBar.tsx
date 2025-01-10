@@ -304,11 +304,13 @@ const MobileNav = ({
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuItem>
-                  <Link href="/shop">All Products</Link>
+                  <Link href="/all-products">All Products</Link>
                 </DropdownMenuItem>
                 {query.data?.map((category: Categories) => (
                   <DropdownMenuItem key={category.id}>
-                    <Link href="/shop">{category.categoryName}</Link>
+                    <Link href={`/${category.categorySlug}`}>
+                      {category.categoryName}
+                    </Link>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuSubContent>
