@@ -1,8 +1,8 @@
 import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import QualityAssuarance from "../_contentBlocks/QualityAssuarance";
-import Newsletter from "../_contentBlocks/Newsletter";
+import QualityAssuarance from "@/app/_contentBlocks/QualityAssuarance";
+import Newsletter from "@/app/_contentBlocks/Newsletter";
 
 type Props = {};
 

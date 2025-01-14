@@ -21,9 +21,7 @@ export default function RootLayout({
       <html lang="en">
         <body>
           <TanstackQueryProvider>
-            <NavigationBar />
             <main>{children}</main>
-            <Footer />
             <Toaster />
           </TanstackQueryProvider>
         </body>

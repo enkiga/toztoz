@@ -58,12 +58,19 @@ import {
 import { useStore } from "../_store/store";
 import { useQuery } from "@tanstack/react-query";
 
-import { SignInButton, SignedIn, SignOutButton, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignOutButton, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 
 interface Categories {
   id: string;
   categoryName: string;
   categorySlug: string;
+}
+
+interface UserData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 const NavigationBar = () => {
@@ -74,6 +81,13 @@ const NavigationBar = () => {
     queryKey: ["categories"],
     queryFn: fetchCategories,
   });
+
+  const { user, isLoaded } = useUser();
+
+  const { data: isUserLoggedIn, } = useQuery<boolean>({
+    queryKey: ["isUserLoggedIn"],
+    queryFn: () => isLoaded && !!user
+  }) 
 
   return (
     <section className="w-full bg-background py-3 md:py-1  border-b fixed top-0 z-50">
@@ -130,7 +144,9 @@ const NavigationBar = () => {
           <div className="hidden md:flex flex-row items-center gap-3">
             <Search />
             <Cart />
-            <UserProfile />
+            {
+              isUserLoggedIn ? <UserProfile /> : <SignInButton />
+            }
           </div>
 
           {/* Bar Icon for Mobile View */}
