@@ -3,15 +3,7 @@
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import ProductCard from "@/app/_contentBlocks/ProductCard";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+
 import {
   Select,
   SelectContent,
@@ -20,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useStore } from "@/app/_store/store";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 interface Products {
   id: string;
@@ -37,8 +29,26 @@ interface Category {
   categorySlug: string;
 }
 
+interface PageInfo {
+  hasNextPage: boolean;
+  endCursor: string | null;
+  hasPreviousPage: boolean;
+  startCursor: string | null;
+}
+
+interface ProductsConnection {
+  edges: { node: Products }[];
+  pageInfo: PageInfo;
+  aggregate: { count: number };
+}
+
+interface ProductsQueryData {
+  productsConnection: ProductsConnection;
+}
+
 const ShopListing = () => {
-  const { fetchCategories, fetchProducts, fetchProductByCategory } = useStore();
+  const { fetchCategories, fetchProductByCategory, fetchListProducts } =
+    useStore();
 
   const params = useParams<{ categorySlug: string }>();
   const categorySlug = params.categorySlug;
@@ -105,17 +115,48 @@ const ShopListing = () => {
     },
   ];
 
-  const { data, isLoading } = useQuery<Products[]>({
-    // check if categorySlug is all-products tehn fetch all products else not fetch product by category
-    queryKey: ["products", categorySlug],
-    queryFn: () => {
-      if (categorySlug === "all-products") {
-        return fetchProducts();
-      } else {
-        return fetchProductByCategory(categorySlug);
-      }
-    },
-  });
+  const [page, setPage] = useState(1);
+
+  const pageSize = 8;
+
+  const { isPending, data, isError, error, isFetching, isPlaceholderData } =
+    useQuery<ProductsQueryData[]>({
+      // check if categorySlug is all-products tehn fetch all products else not fetch product by category
+      queryKey: ["products", categorySlug, page],
+      queryFn: async (): Promise<ProductsQueryData[]> => {
+        let products: Products[];
+        if (categorySlug === "all-products") {
+          products = await fetchListProducts(pageSize * page);
+        } else {
+          products = await fetchProductByCategory(categorySlug);
+        }
+        return [
+          {
+            productsConnection: {
+              edges: products.map((product) => ({ node: product })),
+              pageInfo: {
+                hasNextPage: products.length === pageSize,
+                endCursor:
+                  products.length > 0 ? products[products.length - 1].id : null,
+                hasPreviousPage: page > 1,
+                // set startCursor to null if page is 1 else set to the first product id
+                startCursor: page === 1 ? null : products[0].id,
+              },
+              aggregate: {
+                count: data?.[0]?.productsConnection?.aggregate?.count || 0,
+              },
+            },
+          },
+        ];
+      },
+      placeholderData: keepPreviousData,
+      staleTime: 5000,
+    });
+
+  // Calculate total number of pages based on aggregate count and page size
+  const totalPages = Math.ceil(
+    (data?.[0]?.productsConnection?.aggregate?.count || 0) / pageSize
+  );
 
   return (
     <section className="w-full md:min-h-screen">
@@ -167,10 +208,12 @@ const ShopListing = () => {
 
         {/* Listing */}
         <div className="w-full flex flex-wrap">
-          {isLoading ? (
+          {isPending ? (
             <div className="">Loading ...</div>
+          ) : isError ? (
+            <p>Error {error.message}</p>
           ) : (
-            data?.map((product) => (
+            data?.[0].productsConnection.edges.map(({ node: product }) => (
               <ProductCard
                 key={product.id}
                 slug={product.productSlug}
@@ -184,28 +227,7 @@ const ShopListing = () => {
         </div>
 
         {/* Pagination */}
-        <Pagination className="my-10">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink isActive>1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink>2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink>3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        
       </div>
     </section>
   );

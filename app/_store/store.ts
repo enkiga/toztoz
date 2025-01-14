@@ -22,6 +22,23 @@ interface Product {
   category: [{ categoryName: string; categorySlug: string }];
 }
 
+interface PageInfo {
+  hasNextPage: boolean;
+  endCursor: string | null;
+  hasPreviousPage: boolean;
+  startCursor: string | null;
+}
+
+interface ProductsConnection {
+  edges: { node: Product }[];
+  pageInfo: PageInfo;
+  aggregate: { count: number };
+}
+
+interface ProductsQueryData {
+  productsConnection: ProductsConnection;
+}
+
 interface Category {
   id: string;
   categoryName: string;
@@ -32,6 +49,7 @@ interface storeState {
   products: Product[];
   categories: Category[];
   fetchProducts: () => Promise<Product[]>;
+  fetchListProducts: (count: number) => Promise<Product[]>;
   fetchProductPreview: (count: number) => Promise<Product[]>;
   fetchProductByCategory: (categorySlug: string) => Promise<Product[]>;
   fetchCategories: () => Promise<Category[]>;
@@ -66,6 +84,45 @@ const useStore = create<storeState>((set) => ({
       `
     );
     set({ products });
+    return products;
+  },
+
+  fetchListProducts: async (count: number) => {
+    const { productsConnection } = await request<{
+      productsConnection: { edges: { node: Product }[] };
+    }>(
+      MASTER_URL,
+      gql`
+      query MyQuery {
+        productsConnection(first: ${count}) {
+          edges {
+            node {
+              id
+              productImage {
+                url
+              }
+              productName
+              productPrice
+              productSlug
+              category {
+                categorySlug
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+            hasPreviousPage
+            startCursor
+          }
+          aggregate {
+            count
+          }
+        }
+      }
+    `
+    );
+    const products = productsConnection.edges.map((edge) => edge.node);
     return products;
   },
 
