@@ -4,6 +4,7 @@ import "./globals.css";
 import NavigationBar from "./_contentBlocks/NavigationBar";
 import Footer from "./_contentBlocks/Footer";
 import { TanstackQueryProvider } from "./_providers/TanstackQueryProvider";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,15 +17,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
-        <TanstackQueryProvider>
-          <NavigationBar />
-          <main>{children}</main>
-          <Footer />
-          <Toaster />
-        </TanstackQueryProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body>
+          <TanstackQueryProvider>
+            <NavigationBar />
+            <main>{children}</main>
+            <Footer />
+            <Toaster />
+          </TanstackQueryProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -58,6 +58,8 @@ import {
 import { useStore } from "../_store/store";
 import { useQuery } from "@tanstack/react-query";
 
+import { SignInButton, SignedIn, SignOutButton, SignedOut, UserButton } from "@clerk/nextjs";
+
 interface Categories {
   id: string;
   categoryName: string;
