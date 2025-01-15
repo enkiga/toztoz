@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import NavigationBar from "@/app/_contentBlocks/NavigationBar";
 import Footer from "@/app/_contentBlocks/Footer";
@@ -7,11 +9,14 @@ type Props = {
 };
 
 function layout({ children }: Props) {
+ 
   return (
     <>
-      <NavigationBar />
-      <main>{children}</main>
-      <Footer />
+      <>
+        <NavigationBar />
+        {children}
+        <Footer />
+      </>
     </>
   );
 }

@@ -19,13 +19,13 @@ const Newsletter = ({}: Props) => {
       </div>
       <div className="w-full md:w-1/2 flex flex-col items-start justify-between p-10">
         <div className="flex flex-col items-start">
-        <h1 className="text-2xl font-semibold">
-          Join the club and get the benefits
-        </h1>
-        <p className="text-start mt-5 text-sm">
-          Sign up for our newsletter and receive exclusive offers on new ranges,
-          sales, products and more
-        </p>
+          <h1 className="text-2xl font-semibold">
+            Join the club and get the benefits
+          </h1>
+          <p className="text-start mt-5 text-sm">
+            Sign up for our newsletter and receive exclusive offers on new
+            ranges, sales, products and more
+          </p>
         </div>
         <div className="flex w-full max-w-sm my-4 md:my-0 items-center space-x-2">
           <Input type="email" placeholder="Email" />

@@ -58,7 +58,11 @@ import {
 import { useStore } from "../_store/store";
 import { useQuery } from "@tanstack/react-query";
 
-import { SignInButton, SignedIn, SignOutButton, SignedOut, UserButton, useUser } from "@clerk/nextjs";
+import {
+  SignInButton,
+  useUser,
+  SignOutButton,
+} from "@clerk/nextjs";
 
 interface Categories {
   id: string;
@@ -66,15 +70,10 @@ interface Categories {
   categorySlug: string;
 }
 
-interface UserData {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
 
 const NavigationBar = () => {
-  const { fetchCategories } = useStore();
+  const { fetchCategories  } = useStore();
+
 
   // Fetch Categories
   const query = useQuery<Categories[]>({
@@ -83,11 +82,6 @@ const NavigationBar = () => {
   });
 
   const { user, isLoaded } = useUser();
-
-  const { data: isUserLoggedIn, } = useQuery<boolean>({
-    queryKey: ["isUserLoggedIn"],
-    queryFn: () => isLoaded && !!user
-  }) 
 
   return (
     <section className="w-full bg-background py-3 md:py-1  border-b fixed top-0 z-50">
@@ -144,9 +138,7 @@ const NavigationBar = () => {
           <div className="hidden md:flex flex-row items-center gap-3">
             <Search />
             <Cart />
-            {
-              isUserLoggedIn ? <UserProfile /> : <SignInButton />
-            }
+            {isLoaded && user ? <UserProfile user={user} /> : <SignInButton />}
           </div>
 
           {/* Bar Icon for Mobile View */}
@@ -163,7 +155,11 @@ const NavigationBar = () => {
 export default NavigationBar;
 
 // User Profile View
-const UserProfile = () => {
+interface UserProfileProps {
+  user: any;
+}
+
+const UserProfile = ({user}: UserProfileProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -172,7 +168,7 @@ const UserProfile = () => {
 
       <DropdownMenuContent className="w-48">
         {/* Label */}
-        <DropdownMenuLabel> My Account</DropdownMenuLabel>
+        <DropdownMenuLabel> {user?.fullName}</DropdownMenuLabel>
 
         <DropdownMenuSeparator />
 
@@ -190,9 +186,10 @@ const UserProfile = () => {
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-red-500">Log out</DropdownMenuItem>
+        <DropdownMenuItem 
+        className="text-red-500"><SignOutButton>Log out</SignOutButton></DropdownMenuItem>
       </DropdownMenuContent>
-    </DropdownMenu>
+    </DropdownMenu> 
   );
 };
 

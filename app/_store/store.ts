@@ -45,9 +45,17 @@ interface Category {
   categorySlug: string;
 }
 
+interface UserState {
+  user: any | null;
+  isLoading: boolean;
+}
+
 interface storeState {
   products: Product[];
   categories: Category[];
+  user: any | null;
+  isLoaded: boolean;
+  setUser: (user: any) => void;
   fetchProducts: () => Promise<Product[]>;
   fetchListProducts: (count: number) => Promise<Product[]>;
   fetchProductPreview: (count: number) => Promise<Product[]>;
@@ -59,6 +67,10 @@ interface storeState {
 const useStore = create<storeState>((set) => ({
   products: [],
   categories: [],
+  user: null,
+  isLoaded: false,
+
+  setUser: (user: any) => set({ user, isLoaded: true }),
 
   fetchProducts: async () => {
     const { products } = await request<{ products: Product[] }>(
