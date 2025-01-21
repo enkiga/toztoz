@@ -45,32 +45,39 @@ interface Category {
   categorySlug: string;
 }
 
-interface UserState {
-  user: any | null;
-  isLoading: boolean;
+interface Cart {
+  id: string;
+  userEmail: string;
+  item: CartItem[];
+}
+
+interface CartItem {
+  id: string;
+  product: Product;
+  selectedQuantity: number;
 }
 
 interface storeState {
   products: Product[];
   categories: Category[];
-  user: any | null;
-  isLoaded: boolean;
-  setUser: (user: any) => void;
+  cart: Cart;
+  cartItem: CartItem[];
   fetchProducts: () => Promise<Product[]>;
   fetchListProducts: (count: number) => Promise<Product[]>;
   fetchProductPreview: (count: number) => Promise<Product[]>;
   fetchProductByCategory: (categorySlug: string) => Promise<Product[]>;
   fetchCategories: () => Promise<Category[]>;
   fetchProductBySlug: (productSlug: string) => Promise<Product>;
+  addToCart: (product: Product, selectedQuantity: number) => void;
+  removeFromCart: (productSlug: string) => void;
+  clearCart: () => void;
 }
 
-const useStore = create<storeState>((set) => ({
+const useStore = create<storeState>((set, get) => ({
   products: [],
   categories: [],
-  user: null,
-  isLoaded: false,
-
-  setUser: (user: any) => set({ user, isLoaded: true }),
+  cart: { id: "", userEmail: "", item: [] },
+  cartItem: [],
 
   fetchProducts: async () => {
     const { products } = await request<{ products: Product[] }>(
@@ -227,6 +234,52 @@ const useStore = create<storeState>((set) => ({
       `
     );
     return product;
+  },
+
+  addToCart: (product, selectedQuantity) => {
+    const existingItem = get().cartItem.find(
+      (item) => item.product.productSlug === product.productSlug
+    );
+
+    if (existingItem) {
+      // If product exists, update its quantity
+      return set({
+        cartItem: get().cartItem.map((item) =>
+          item.product.productSlug === product.productSlug
+            ? {
+                ...item,
+                selectedQuantity: item.selectedQuantity + selectedQuantity,
+              }
+            : item
+        ),
+      });
+    } else {
+      // If product doesn't exist, add it to the cart
+      return set({
+        cartItem: [
+          ...get().cartItem,
+          {
+            id: product.productSlug, // You might want to generate a unique ID here
+            product,
+            selectedQuantity,
+          },
+        ],
+      });
+    }
+  },
+
+  removeFromCart: (productSlug) => {
+    set({
+      cartItem: get().cartItem.filter(
+        (item) => item.product.productSlug !== productSlug
+      ),
+    });
+    return;
+  },
+
+  clearCart: () => {
+    set({ cartItem: [] });
+    return;
   },
 }));
 

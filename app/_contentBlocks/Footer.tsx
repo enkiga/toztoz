@@ -24,7 +24,7 @@ const Footer = () => {
   });
 
   return (
-    <footer className="w-full bg-purple-800 py-5 text-gray-50">
+    <footer className="w-full bg-gray-800 py-5 text-gray-50">
       {/* Top Half */}
       <div className=" w-11/12 mx-auto flex flex-wrap justify-between py-2 border-b">
         {/* Links */}

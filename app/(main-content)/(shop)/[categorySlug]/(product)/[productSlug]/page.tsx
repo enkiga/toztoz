@@ -15,11 +15,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { useStore } from "@/app/_store/store";
 import { useQuery } from "@tanstack/react-query";
 import markdownit from "markdown-it";
 import ProductListing from "@/app/_contentBlocks/ProductListing";
+import { useUser } from "@clerk/nextjs";
+import { Loader2 } from "lucide-react";
 
 interface Product {
   id: string;
@@ -33,12 +35,22 @@ interface Product {
   category: [{ categoryName: string; categorySlug: string }];
 }
 
+interface Cart {
+  userEmail: string;
+  item: CartItem[];
+}
+
+interface CartItem extends Product {
+  product: Product;
+  selectedQuantity: number;
+}
+
 interface Error {
   message: string;
 }
 
 const ProductPage = () => {
-  const { fetchProductBySlug } = useStore();
+  const { fetchProductBySlug, addToCart } = useStore();
 
   const params = useParams<{ categorySlug: string; productSlug: string }>();
 
@@ -98,6 +110,35 @@ const ProductPage = () => {
       setAlert((alert) => !alert);
     }
   };
+
+  // Cart grapql operations
+
+  const { user } = useUser();
+
+  const email = user?.primaryEmailAddress?.emailAddress || "";
+
+  // Add to Cart button functionality
+  const [addingToCart, setAddingToCart] = useState<boolean>(false);
+
+  const handleCart = () => {
+    setAddingToCart(true);
+    const cartItem: CartItem = {
+      ...data!,
+      product: data!,
+      selectedQuantity: cartQuantity,
+    };
+
+    if (data) {
+      addToCart(data, cartQuantity);
+      setAddingToCart(false);
+      setCartQuantity(1);
+      toast("Added to cart", {
+        description: `${data.productName} has been added to cart`,
+      })
+    }
+  };
+
+  // create a boolean to check if the product is in the cart
 
   return (
     <section className="w-full min-h-screen pt-20">
@@ -165,12 +206,24 @@ const ProductPage = () => {
 
               {/* CTA Buttons */}
               <div className="w-full flex flex-col md:flex-row md:space-x-2 mt-5">
-                <Button className="w-full mt-4" size="lg">
-                  Add to Cart
-                </Button>
-                <Button className="w-full mt-4" variant="outline" size="lg">
+                {addingToCart ? (
+                  <Button className="w-full md:w-1/2 mt-4" size="lg" disabled>
+                    <Loader2 className="animate-spin" />
+                    Adding to Cart
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full md:w-1/2 mt-4"
+                    size="lg"
+                    onClick={() => handleCart()}
+                  >
+                    Add to Cart
+                  </Button>
+                )}
+
+                {/* <Button className="w-full mt-4" variant="outline" size="lg">
                   Save to Wishlist
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
