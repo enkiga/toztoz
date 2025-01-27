@@ -62,6 +62,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SignInButton, useUser, SignOutButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRouter } from "next/navigation";
 
 interface Categories {
   id: string;
@@ -206,6 +207,8 @@ const Cart = () => {
     return formatPrice(price * quantity);
   };
 
+  const router = useRouter();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -282,7 +285,7 @@ const Cart = () => {
               >
                 Clear Cart
               </Button>
-              <Button>Proceed to checkout</Button>
+              <Button onClick={()=> router.push("/checkout")}>Proceed to checkout</Button>
             </div>
           </div>
         </SheetFooter>
