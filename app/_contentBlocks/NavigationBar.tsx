@@ -142,6 +142,7 @@ const NavigationBar = () => {
           {/* Bar Icon for Mobile View */}
           <div className="flex flex-row gap-4 md:hidden">
             <Search />
+            <Cart />
             <MobileNav query={query} />
           </div>
         </div>
@@ -226,68 +227,75 @@ const Cart = () => {
           <SheetDescription>These are the items in your cart</SheetDescription>
         </SheetHeader>
         {/* Items Selected */}
-        <ScrollArea className=" h-80 w-full pr-4 my-4">
-          {cartItem.map((item) => (
-            <div
-              className="flex flex-col gap-3 py-4"
-              key={item.product.productSlug}
-            >
-              <div className="flex flex-row items-center justify-between">
-                <div className="flex flex-row items-start gap-3">
-                  <Image
-                    src={item.product.productImage[0].url}
-                    alt="product"
-                    width={64}
-                    height={64}
-                    className="w-16 h-16 object-contain object-center"
-                  />
-                  <div className="flex flex-col items-start pr-3">
-                    <p className=" line-clamp-1 text-sm">
-                      {item.product.productName}
-                    </p>
-                    <p className="text-gray-600 text-sm">
-                      Kes{" "}
-                      {totalItemPrice(
-                        item.product.productPrice,
-                        item.selectedQuantity
-                      )}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Quantity: {item.selectedQuantity}
-                    </p>
+        {/* If cart is empty display cart is empty else show the scroll area */}
+        {cartItem.length === 0 ? (
+          <div className="h-80 w-full pr-4 my-4 flex flex-col items-center justify-center">
+            <p className="text-center text-gray-500">Your cart is empty</p>
+          </div>
+        ) : (
+          <ScrollArea className=" h-80 w-full pr-4 my-4">
+            {cartItem.map((item) => (
+              <div
+                className="flex flex-col gap-3 py-4"
+                key={item.product.productSlug}
+              >
+                <div className="flex flex-row items-center justify-between">
+                  <div className="flex flex-row items-start gap-3">
+                    <Image
+                      src={item.product.productImage[0].url}
+                      alt="product"
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 object-contain object-center"
+                    />
+                    <div className="flex flex-col items-start pr-3">
+                      <p className=" line-clamp-1 text-sm">
+                        {item.product.productName}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Kes{" "}
+                        {totalItemPrice(
+                          item.product.productPrice,
+                          item.selectedQuantity
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Quantity: {item.selectedQuantity}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      onClick={() => removeFromCart(item.product.productSlug)}
+                    >
+                      <Trash2Icon size={16} />
+                    </Button>
                   </div>
                 </div>
-                <div>
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={() => removeFromCart(item.product.productSlug)}
-                  >
-                    <Trash2Icon size={16} />
-                  </Button>
-                </div>
               </div>
-            </div>
-          ))}
-        </ScrollArea>
+            ))}
+          </ScrollArea>
+        )}
 
         <SheetFooter>
-          <div className="flex flex-col w-full gap-4">
-
-            <div className="flex flex-row justify-between w-full">
-              <p className="text-lg">Total</p>
-              <p className="text-lg">Kes {formatPrice(total)}</p>
+          {cartItem.length > 0 && (
+            <div className="flex flex-col w-full gap-4">
+              <div className="flex flex-row justify-between w-full">
+                <p className="text-lg">Total</p>
+                <p className="text-lg">Kes {formatPrice(total)}</p>
+              </div>
+              <div className="flex flex-col justify-between w-full gap-2">
+                <Button variant="destructive" onClick={() => clearCart()}>
+                  Clear Cart
+                </Button>
+                <Button onClick={() => router.push("/checkout")}>
+                  Proceed to checkout
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-col justify-between w-full gap-2">
-              <Button
-                variant="destructive"
-                onClick={() => clearCart()}
-              >
-                Clear Cart
-              </Button>
-              <Button onClick={()=> router.push("/checkout")}>Proceed to checkout</Button>
-            </div>
-          </div>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -353,19 +361,16 @@ const MobileNav = ({
             <Link href="/profile">Profile</Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <Link href="/cart">Cart</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
             <Link href="/orders">Orders</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Link href="/wishlist">Wishlist</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <Link href="/about">About Us</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/contact">Contact</Link>
           </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Categories</DropdownMenuSubTrigger>
@@ -384,13 +389,12 @@ const MobileNav = ({
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>
-          <DropdownMenuItem>
-            <Link href="/contact">Contact</Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-red-500">Log out</DropdownMenuItem>
+        <DropdownMenuItem className="text-red-500">
+          <SignOutButton>Log out</SignOutButton>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

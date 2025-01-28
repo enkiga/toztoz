@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { gql, request } from "graphql-request";
 
 const MASTER_URL = process.env.NEXT_PUBLIC_HYGRAPGH_ENDPOINT;
@@ -73,45 +74,47 @@ interface storeState {
   clearCart: () => void;
 }
 
-const useStore = create<storeState>((set, get) => ({
-  products: [],
-  categories: [],
-  cart: { id: "", userEmail: "", item: [] },
-  cartItem: [],
+const useStore = create<storeState>()(
+  persist(
+    (set, get) => ({
+      products: [],
+      categories: [],
+      cart: { id: "", userEmail: "", item: [] },
+      cartItem: [],
 
-  fetchProducts: async () => {
-    const { products } = await request<{ products: Product[] }>(
-      MASTER_URL,
-      gql`
-        query MyQuery {
-          products(first: 12) {
-            id
-            productDescription
-            productImage {
-              url
+      fetchProducts: async () => {
+        const { products } = await request<{ products: Product[] }>(
+          MASTER_URL,
+          gql`
+            query MyQuery {
+              products(first: 12) {
+                id
+                productDescription
+                productImage {
+                  url
+                }
+                productName
+                productPrice
+                productQuantity
+                productSlug
+                productStatus
+                category {
+                  categoryName
+                }
+              }
             }
-            productName
-            productPrice
-            productQuantity
-            productSlug
-            productStatus
-            category {
-              categoryName
-            }
-          }
-        }
-      `
-    );
-    set({ products });
-    return products;
-  },
+          `
+        );
+        set({ products });
+        return products;
+      },
 
-  fetchListProducts: async (count: number) => {
-    const { productsConnection } = await request<{
-      productsConnection: { edges: { node: Product }[] };
-    }>(
-      MASTER_URL,
-      gql`
+      fetchListProducts: async (count: number) => {
+        const { productsConnection } = await request<{
+          productsConnection: { edges: { node: Product }[] };
+        }>(
+          MASTER_URL,
+          gql`
       query MyQuery {
         productsConnection(first: ${count}) {
           edges {
@@ -140,15 +143,15 @@ const useStore = create<storeState>((set, get) => ({
         }
       }
     `
-    );
-    const products = productsConnection.edges.map((edge) => edge.node);
-    return products;
-  },
+        );
+        const products = productsConnection.edges.map((edge) => edge.node);
+        return products;
+      },
 
-  fetchProductPreview: async (count: number) => {
-    const { products } = await request<{ products: Product[] }>(
-      MASTER_URL,
-      gql`
+      fetchProductPreview: async (count: number) => {
+        const { products } = await request<{ products: Product[] }>(
+          MASTER_URL,
+          gql`
         query MyQuery {
           products(first: ${count}) {
             productImage {
@@ -163,32 +166,32 @@ const useStore = create<storeState>((set, get) => ({
           }
         }
       `
-    );
-    set({ products });
-    return products;
-  },
+        );
+        set({ products });
+        return products;
+      },
 
-  fetchCategories: async () => {
-    const { categories } = await request<{ categories: Category[] }>(
-      MASTER_URL,
-      gql`
-        query MyQuery {
-          categories {
-            id
-            categoryName
-            categorySlug
-          }
-        }
-      `
-    );
-    set({ categories });
-    return categories;
-  },
+      fetchCategories: async () => {
+        const { categories } = await request<{ categories: Category[] }>(
+          MASTER_URL,
+          gql`
+            query MyQuery {
+              categories {
+                id
+                categoryName
+                categorySlug
+              }
+            }
+          `
+        );
+        set({ categories });
+        return categories;
+      },
 
-  fetchProductByCategory: async (categorySlug: string) => {
-    const { products } = await request<{ products: Product[] }>(
-      MASTER_URL,
-      gql`
+      fetchProductByCategory: async (categorySlug: string) => {
+        const { products } = await request<{ products: Product[] }>(
+          MASTER_URL,
+          gql`
         query MyQuery {
           products(first: 12, where: {category_every: {categorySlug: "${categorySlug}"}}) {
             productName
@@ -204,15 +207,15 @@ const useStore = create<storeState>((set, get) => ({
           }
         }
       `
-    );
-    set({ products });
-    return products;
-  },
+        );
+        set({ products });
+        return products;
+      },
 
-  fetchProductBySlug: async (productSlug: string) => {
-    const { product } = await request<{ product: Product }>(
-      MASTER_URL,
-      gql`
+      fetchProductBySlug: async (productSlug: string) => {
+        const { product } = await request<{ product: Product }>(
+          MASTER_URL,
+          gql`
         query MyQuery {
           product(where: {productSlug: "${productSlug}"}) {
             id
@@ -232,55 +235,62 @@ const useStore = create<storeState>((set, get) => ({
           }
         }
       `
-    );
-    return product;
-  },
+        );
+        return product;
+      },
 
-  addToCart: (product, selectedQuantity) => {
-    const existingItem = get().cartItem.find(
-      (item) => item.product.productSlug === product.productSlug
-    );
+      addToCart: (product, selectedQuantity) => {
+        const existingItem = get().cartItem.find(
+          (item) => item.product.productSlug === product.productSlug
+        );
 
-    if (existingItem) {
-      // If product exists, update its quantity
-      return set({
-        cartItem: get().cartItem.map((item) =>
-          item.product.productSlug === product.productSlug
-            ? {
-                ...item,
-                selectedQuantity: item.selectedQuantity + selectedQuantity,
-              }
-            : item
-        ),
-      });
-    } else {
-      // If product doesn't exist, add it to the cart
-      return set({
-        cartItem: [
-          ...get().cartItem,
-          {
-            id: product.productSlug, // You might want to generate a unique ID here
-            product,
-            selectedQuantity,
-          },
-        ],
-      });
+        if (existingItem) {
+          // If product exists, update its quantity
+          return set({
+            cartItem: get().cartItem.map((item) =>
+              item.product.productSlug === product.productSlug
+                ? {
+                    ...item,
+                    selectedQuantity: item.selectedQuantity + selectedQuantity,
+                  }
+                : item
+            ),
+          });
+        } else {
+          // If product doesn't exist, add it to the cart
+          return set({
+            cartItem: [
+              ...get().cartItem,
+              {
+                id: product.productSlug, // You might want to generate a unique ID here
+                product,
+                selectedQuantity,
+              },
+            ],
+          });
+        }
+      },
+
+      removeFromCart: (productSlug) => {
+        set({
+          cartItem: get().cartItem.filter(
+            (item) => item.product.productSlug !== productSlug
+          ),
+        });
+        return;
+      },
+
+      clearCart: () => {
+        set({ cartItem: [] });
+        return;
+      },
+    }),
+    {
+      name: "cart-storage",
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({ cartItem: state.cartItem }),
     }
-  },
-
-  removeFromCart: (productSlug) => {
-    set({
-      cartItem: get().cartItem.filter(
-        (item) => item.product.productSlug !== productSlug
-      ),
-    });
-    return;
-  },
-
-  clearCart: () => {
-    set({ cartItem: [] });
-    return;
-  },
-}));
+  )
+);
 
 export { useStore };
