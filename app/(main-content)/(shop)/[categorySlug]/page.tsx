@@ -162,7 +162,7 @@ const ShopListing = () => {
     <section className="w-full md:min-h-screen">
       {/* Title header */}
       <div className="relative bg-[url(https://images.unsplash.com/photo-1617784625140-515e220ba148?q=80&w=1634&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] bg-cover bg-center bg-no-repeat w-full h-40 md:h-56">
-        <div className="absolute inset-0 bg-purple-800/65"></div>
+        <div className="absolute inset-0 bg-gray-800/75"></div>
         <h1 className="absolute bottom-3 left-6 md:left-16 text-4xl text-gray-50 font-bold">
           {category?.categoryName || "All Products"}
         </h1>

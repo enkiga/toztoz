@@ -9,19 +9,110 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import React from "react";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@clerk/nextjs";
 import { useStore } from "@/app/_store/store";
 import { useRouter } from "next/navigation";
 
+// Step 1: Split schema into individual step schemas
+const PersonalSchema = z.object({
+  name: z
+    .string()
+    .min(2, { message: "Name should be more than 2 characters" })
+    .max(255),
+  email: z.string().email({ message: "Invalid email address" }),
+  mobileNo: z
+    .string()
+    .startsWith("+254", { message: "Phone number should start with +254" })
+    .length(13, { message: "Phone number should be 13 characters long" }),
+});
+
+const ShippingSchema = z.object({
+  county: z.string().nonempty({ message: "County is required" }),
+  city: z.string().nonempty({ message: "City is required" }),
+  district: z.string().nonempty({ message: "District is required" }),
+  street: z.string().nonempty({ message: "Street is required" }),
+});
+
+const PaymentSchema = z.object({
+  mpesaCode: z.string().nonempty({ message: "Mpesa code is required" }),
+});
+
+type FormData = {
+  personal: z.infer<typeof PersonalSchema>;
+  shipping: z.infer<typeof ShippingSchema>;
+  payment: z.infer<typeof PaymentSchema>;
+};
+
 const CheckoutPage = () => {
   const { user } = useUser();
   // get cart items from store: if cart is empty, redirect to homepage with a message to add items to cart
   const { cartItem } = useStore();
   const router = useRouter();
+
+  const [activeTab, setActiveTab] = useState("personal-details");
+  const [completedSteps, setCompletedSteps] = useState({
+    personal: false,
+    shipping: false,
+  });
+
+  // Step 3: Create aggregated form state
+  const [formData, setFormData] = useState<FormData>({
+    personal: {
+      name: user?.fullName ?? "",
+      email: user?.primaryEmailAddress?.emailAddress ?? "",
+      mobileNo: "",
+    },
+    shipping: { county: "", city: "", district: "", street: "" },
+    payment: { mpesaCode: "" },
+  });
+
+  // Step 2: Create separate forms with individual schemas
+  const personalForm = useForm<z.infer<typeof PersonalSchema>>({
+    resolver: zodResolver(PersonalSchema),
+    defaultValues: formData.personal,
+  });
+
+  const shippingForm = useForm<z.infer<typeof ShippingSchema>>({
+    resolver: zodResolver(ShippingSchema),
+    defaultValues: formData.shipping,
+  });
+
+  const paymentForm = useForm<z.infer<typeof PaymentSchema>>({
+    resolver: zodResolver(PaymentSchema),
+    defaultValues: formData.payment,
+  });
+
+  const handlePersonalSubmit = (data: z.infer<typeof PersonalSchema>) => {
+    setFormData((prev) => ({ ...prev, personal: data }));
+    setCompletedSteps((prev) => ({ ...prev, personal: true }));
+    setActiveTab("shipping-details");
+  };
+
+  const handleShippingSubmit = (data: z.infer<typeof ShippingSchema>) => {
+    setFormData((prev) => ({ ...prev, shipping: data }));
+    setCompletedSteps((prev) => ({ ...prev, shipping: true }));
+    setActiveTab("payment-details");
+  };
+
+  const handlePaymentSubmit = (data: z.infer<typeof PaymentSchema>) => {
+    const finalData = { ...formData, payment: data };
+    console.log("Final submission:", finalData);
+    // Submit to backend here
+  };
 
   return (
     <>
@@ -46,20 +137,37 @@ const CheckoutPage = () => {
         <section className="w-full min-h-screen pt-20">
           <Tabs
             className="w-11/12 mx-auto"
-            defaultValue="personal-details"
+            value={activeTab}
+            onValueChange={(value) => {
+              // Prevent manual tab switching if previous steps aren't completed
+              if (value === "shipping-details" && !completedSteps.personal)
+                return;
+              if (value === "payment-details" && !completedSteps.shipping)
+                return;
+              setActiveTab(value);
+            }}
             orientation="horizontal"
           >
             <TabsList className="w-full bg-gray-50">
               <TabsTrigger className="w-full" value="personal-details">
-                Personal details
+                Personal
               </TabsTrigger>
-              <TabsTrigger className="w-full" value="shipping-details">
-                Shipping details
+              <TabsTrigger
+                className="w-full"
+                value="shipping-details"
+                disabled={!completedSteps.personal}
+              >
+                Shipping
               </TabsTrigger>
-              <TabsTrigger className="w-full" value="payment-details">
-                Payment details
+              <TabsTrigger
+                className="w-full"
+                value="payment-details"
+                disabled={!completedSteps.shipping}
+              >
+                Payment
               </TabsTrigger>
             </TabsList>
+
             <TabsContent value="personal-details">
               <Card>
                 <CardHeader>
@@ -69,27 +177,67 @@ const CheckoutPage = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" defaultValue={user?.fullName ?? ""} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="email">Username</Label>
-                    <Input
-                      id="email"
-                      defaultValue={
-                        user?.primaryEmailAddress?.emailAddress ?? ""
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="mobileNo">Phone Number</Label>
-                    <Input id="emobileNo" placeholder="+254" required />
-                  </div>
+                  <Form {...personalForm}>
+                    <form
+                      className="space-y-3"
+                      onSubmit={personalForm.handleSubmit(handlePersonalSubmit)}
+                    >
+                      {/* Get user name */}
+                      <FormField
+                        control={personalForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="name">Full Name</FormLabel>
+                            <FormControl>
+                              <Input id="name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Get user email */}
+                      <FormField
+                        control={personalForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="email">Email Address</FormLabel>
+                            <FormControl>
+                              <Input id="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Get user phone number */}
+                      <FormField
+                        control={personalForm.control}
+                        name="mobileNo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="mobileNo">
+                              Mobile Number
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                id="mobileNo"
+                                {...field}
+                                placeholder="+254"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button className="md:w-fit w-full " type="submit">
+                        Proceed
+                      </Button>
+                    </form>
+                  </Form>
                 </CardContent>
-                <CardFooter>
-                  <Button>Save changes</Button>
-                </CardFooter>
               </Card>
             </TabsContent>
             <TabsContent value="shipping-details">
@@ -101,52 +249,95 @@ const CheckoutPage = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="county">County</Label>
-                    <Input id="county" />
-                  </div>
-                  <div className="space-y-1">
-                    {/* Add 2 fields on one line city & district */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label htmlFor="city">City</Label>
-                        <Input id="city" />
-                      </div>
-                      <div>
-                        <Label htmlFor="district">District</Label>
-                        <Input id="district" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="street">Street Address</Label>
-                    <Input id="street" />
-                  </div>
+                  <Form {...shippingForm}>
+                    <form
+                      className="space-y-3"
+                      onSubmit={shippingForm.handleSubmit(handleShippingSubmit)}
+                    >
+                      <FormField
+                        control={shippingForm.control}
+                        name="county"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="county">County</FormLabel>
+                            <FormControl>
+                              <Input id="county" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={shippingForm.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="city">City</FormLabel>
+                            <FormControl>
+                              <Input id="city" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={shippingForm.control}
+                        name="district"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="district">District</FormLabel>
+                            <FormControl>
+                              <Input id="district" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={shippingForm.control}
+                        name="street"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="street">Street</FormLabel>
+                            <FormControl>
+                              <Input id="street" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button className="md:w-fit w-full " type="submit">
+                        Proceed
+                      </Button>
+                    </form>
+                  </Form>
                 </CardContent>
-                <CardFooter>
-                  <Button>Save changes</Button>
-                </CardFooter>
               </Card>
             </TabsContent>
+
             <TabsContent value="payment-details">
               <Card>
                 <CardHeader>
                   <CardTitle>Payment Details</CardTitle>
-                  <CardDescription>
+                  <CardDescription className="border-b pb-3">
                     Fill in your payment details to proceed with the checkout
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between md:mx-3">
+                  <div className="space-y-2 border-b pb-5">
+                    <div className="flex items-center justify-between">
                       <p>Cart Total</p>
                       <p>Kes 20,000</p>
                     </div>
-                    <div className="flex items-center justify-between md:mx-3">
+                    <div className="flex items-center justify-between">
                       <p>Shipping Fee</p>
                       <p>Kes 1,000</p>
                     </div>
-                    <div className="flex items-center justify-between md:mx-3">
+                    <div className="flex items-center justify-between">
                       <p>Total</p>
                       <p>Kes 21,000</p>
                     </div>
@@ -159,14 +350,32 @@ const CheckoutPage = () => {
                       the Mpesa code below to complete your order
                     </p>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="mpesaCode">Mpesa Code</Label>
-                    <Input id="mpesaCode" />
-                  </div>
+                  <Form {...paymentForm}>
+                    <form
+                      className="space-y-3"
+                      onSubmit={paymentForm.handleSubmit(handlePaymentSubmit)}
+                    >
+                      <FormField
+                        control={paymentForm.control}
+                        name="mpesaCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="mpesaCode">
+                              Mpesa Code
+                            </FormLabel>
+                            <FormControl>
+                              <Input id="mpesaCode" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button className="md:w-fit w-full " type="submit">
+                        Complete Order
+                      </Button>
+                    </form>
+                  </Form>
                 </CardContent>
-                <CardFooter>
-                  <Button>Complete Order</Button>
-                </CardFooter>
               </Card>
             </TabsContent>
           </Tabs>

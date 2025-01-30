@@ -179,9 +179,6 @@ const UserProfile = ({ user }: UserProfileProps) => {
           <DropdownMenuItem>
             <Link href="/orders">Orders</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Link href="/wishlist">Wishlist</Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
@@ -290,9 +287,11 @@ const Cart = () => {
                 <Button variant="destructive" onClick={() => clearCart()}>
                   Clear Cart
                 </Button>
-                <Button onClick={() => router.push("/checkout")}>
-                  Proceed to checkout
-                </Button>
+                <SheetClose asChild>
+                  <Button onClick={() => router.push("/checkout")}>
+                    Proceed to checkout
+                  </Button>
+                </SheetClose>
               </div>
             </div>
           )}
