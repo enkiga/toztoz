@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -25,7 +24,30 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@clerk/nextjs";
 import { useStore } from "@/app/_store/store";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+interface Order {
+  customerName: string;
+  customerEmail: string;
+  customerMobile: string;
+  county: string;
+  city: string;
+  district: string;
+  street: string;
+  itemTotal: number;
+  shippingFee: number;
+  orderTotal: number;
+  mpesaCode: string;
+  orderItem: OrderItem[];
+}
+
+interface OrderItem {
+  quantity: number;
+  product: { id: string };
+}
 
 // Step 1: Split schema into individual step schemas
 const PersonalSchema = z.object({
@@ -60,7 +82,7 @@ type FormData = {
 const CheckoutPage = () => {
   const { user } = useUser();
   // get cart items from store: if cart is empty, redirect to homepage with a message to add items to cart
-  const { cartItem } = useStore();
+  const { cartItem, createOrder } = useStore();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("en-US");
@@ -69,10 +91,6 @@ const CheckoutPage = () => {
   const total = cartItem.reduce((acc, item) => {
     return acc + item.product.productPrice * item.selectedQuantity;
   }, 0);
-
-  const totalItemPrice = (price: number, quantity: number) => {
-    return formatPrice(price * quantity);
-  };
 
   /* Lets create sheeping fee logic: 
   1. Minimum shipping fee is 200
@@ -92,7 +110,7 @@ const CheckoutPage = () => {
 
   const orderTotal = (total: number) => {
     return formatPrice(total + shippingFee(total));
-  }
+  };
 
   const router = useRouter();
 
@@ -111,6 +129,42 @@ const CheckoutPage = () => {
     },
     shipping: { county: "", city: "", district: "", street: "" },
     payment: { mpesaCode: "" },
+  });
+
+  // Step 1: Create mutation with proper types
+  const orderMutation = useMutation({
+    mutationFn: async (orderData: Order) => {
+      const orderPayload = {
+        ...orderData,
+
+        itemTotal: total,
+        shippingFee: shippingFee(total), // Replace with actual shipping calculation
+        orderTotal: 0, // Will be calculated below
+        orderItem: cartItem.map((item) => ({
+          quantity: item.selectedQuantity,
+          product: {
+            id: item.product.id,
+          },
+        })),
+      };
+
+      orderPayload.orderTotal =
+        orderPayload.itemTotal + orderPayload.shippingFee;
+
+      return createOrder(orderPayload);
+    },
+    onSuccess: (data) => {
+      // Clear cart on success
+      useStore.getState().clearCart();
+      router.push("/orders");
+    },
+    onError: (error) => {
+      console.error("Order submission failed:", error);
+      // Add toast notification here
+      toast("Order submission failed", {
+        description: error.message,
+      });
+    },
   });
 
   // Step 2: Create separate forms with individual schemas
@@ -142,9 +196,27 @@ const CheckoutPage = () => {
   };
 
   const handlePaymentSubmit = (data: z.infer<typeof PaymentSchema>) => {
-    const finalData = { ...formData, payment: data };
-    console.log("Final submission:", finalData);
-    // Submit to backend here
+    const completeOrderData: Order = {
+      customerName: formData.personal.name,
+      customerEmail: formData.personal.email,
+      customerMobile: formData.personal.mobileNo,
+      county: formData.shipping.county,
+      city: formData.shipping.city,
+      district: formData.shipping.district,
+      street: formData.shipping.street,
+      itemTotal: total,
+      shippingFee: shippingFee(total),
+      orderTotal: total + shippingFee(total),
+      mpesaCode: data.mpesaCode,
+      orderItem: cartItem.map((item) => ({
+        quantity: item.selectedQuantity,
+        product: {
+          id: item.product.id,
+        },
+      })),
+    };
+
+    orderMutation.mutate(completeOrderData);
   };
 
   return (
@@ -379,8 +451,9 @@ const CheckoutPage = () => {
                   <div className="">
                     {/* Provide mpessa paybill details and instructions */}
                     <p className="text-sm text-gray-600">
-                      Pay Kes {orderTotal(total)} to Paybill 123456 Account 123456 then enter
-                      the Mpesa code below to complete your order
+                      Pay Kes {orderTotal(total)} to Paybill 123456 Account
+                      123456 then enter the Mpesa code below to complete your
+                      order
                     </p>
                   </div>
                   <Form {...paymentForm}>
@@ -403,9 +476,25 @@ const CheckoutPage = () => {
                           </FormItem>
                         )}
                       />
-                      <Button className="md:w-fit w-full " type="submit">
-                        Complete Order
+                      <Button
+                        type="submit"
+                        disabled={orderMutation.isPending}
+                        className="md:w-fit w-full"
+                      >
+                        {orderMutation.isPending ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Processing...
+                          </div>
+                        ) : (
+                          "Complete Order"
+                        )}
                       </Button>
+                      {orderMutation.isError && (
+                        <p className="text-red-500 mt-2">
+                          Error: {orderMutation.error.message}
+                        </p>
+                      )}
                     </form>
                   </Form>
                 </CardContent>

@@ -58,11 +58,33 @@ interface CartItem {
   selectedQuantity: number;
 }
 
+interface Order {
+  customerName: string;
+  customerEmail: string;
+  customerMobile: string;
+  county: string;
+  city: string;
+  district: string;
+  street: string;
+  itemTotal: number;
+  shippingFee: number;
+  orderTotal: number;
+  mpesaCode: string;
+  orderItem: OrderItem[];
+};
+
+interface OrderItem {
+  quantity: number;
+  product: { id: string };
+}
+
 interface storeState {
   products: Product[];
   categories: Category[];
   cart: Cart;
   cartItem: CartItem[];
+  order: Order;
+  orderItem: OrderItem[];
   fetchProducts: () => Promise<Product[]>;
   fetchListProducts: (count: number) => Promise<Product[]>;
   fetchProductPreview: (count: number) => Promise<Product[]>;
@@ -72,6 +94,7 @@ interface storeState {
   addToCart: (product: Product, selectedQuantity: number) => void;
   removeFromCart: (productSlug: string) => void;
   clearCart: () => void;
+  createOrder: (order: Order) => Promise<Order>;
 }
 
 const useStore = create<storeState>()(
@@ -81,6 +104,28 @@ const useStore = create<storeState>()(
       categories: [],
       cart: { id: "", userEmail: "", item: [] },
       cartItem: [],
+      order: {
+        customerName: "",
+        customerEmail: "",
+        customerMobile: "",
+        county: "",
+        city: "",
+        district: "",
+        street: "",
+        orderItem: [
+          {
+            quantity: 0,
+            product: {
+              id: "",
+            },
+          },
+        ],
+        itemTotal: 0,
+        shippingFee: 0,
+        orderTotal: 0,
+        mpesaCode: "",
+      },
+      orderItem: [],
 
       fetchProducts: async () => {
         const { products } = await request<{ products: Product[] }>(
@@ -283,6 +328,93 @@ const useStore = create<storeState>()(
       clearCart: () => {
         set({ cartItem: [] });
         return;
+      },
+
+      createOrder: async (order: Order) => {
+        const { createOrder } = await request<{ createOrder: Order }>(
+          MASTER_URL,
+          gql`
+            mutation MyMutation(
+              $orderItem: OrderItemCreateManyInlineInput!
+              $customerEmail: String!
+              $customerName: String!
+              $customerMobile: String!
+              $city: String!
+              $county: String!
+              $district: String!
+              $mpesaCode: String!
+              $street: String!
+              $itemTotal: Int!
+              $orderTotal: Int = 10
+              $shippingFee: Int = 10
+            ) {
+              createOrder(
+                data: {
+                  customerName: $customerName
+                  orderItem: $orderItem
+                  customerEmail: $customerEmail
+                  customerMobile: $customerMobile
+                  city: $city
+                  county: $county
+                  district: $district
+                  mpesaCode: $mpesaCode
+                  orderTotal: $orderTotal
+                  shippingFee: $shippingFee
+                  street: $street
+                  itemTotal: $itemTotal
+                }
+              ) {
+                createdAt
+              }
+              publishManyOrdersConnection {
+                edges {
+                  node {
+                    customerName
+                    customerEmail
+                    customerMobile
+                    county
+                    city
+                    district
+                    street
+                    itemTotal
+                    shippingFee
+                    orderTotal
+                    mpesaCode
+                    orderItem {
+                      quantity
+                      product {
+                        id
+                        productSlug
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          {
+            customerName: order.customerName,
+            customerEmail: order.customerEmail,
+            customerMobile: order.customerMobile,
+            county: order.county,
+            city: order.city,
+            district: order.district,
+            street: order.street,
+            itemTotal: order.itemTotal,
+            shippingFee: order.shippingFee,
+            orderTotal: order.orderTotal,
+            mpesaCode: order.mpesaCode,
+
+            orderItem: {
+              create: order.orderItem.map((item) => ({
+                quantity: item.quantity,
+                product: { connect: { id: item.product.id } },
+              })),
+            },
+          }
+        );
+
+        return createOrder;
       },
     }),
     {
