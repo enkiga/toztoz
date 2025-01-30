@@ -61,6 +61,39 @@ const CheckoutPage = () => {
   const { user } = useUser();
   // get cart items from store: if cart is empty, redirect to homepage with a message to add items to cart
   const { cartItem } = useStore();
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("en-US");
+  };
+
+  const total = cartItem.reduce((acc, item) => {
+    return acc + item.product.productPrice * item.selectedQuantity;
+  }, 0);
+
+  const totalItemPrice = (price: number, quantity: number) => {
+    return formatPrice(price * quantity);
+  };
+
+  /* Lets create sheeping fee logic: 
+  1. Minimum shipping fee is 200
+  2. based on th the total price, we can calculate the shipping fee
+  3. if total price is less than 1000, shipping fee is 200
+  4. Increment shipping fee by the rate of 2.5% of the total price for every 1000
+  5 If fee has a decimal, round it up to the nearest whole number
+  */
+  const shippingFee = (total: number) => {
+    if (total < 1000) {
+      return 200;
+    } else {
+      const fee = 200 + (total - 1000) * 0.105;
+      return Math.ceil(fee);
+    }
+  };
+
+  const orderTotal = (total: number) => {
+    return formatPrice(total + shippingFee(total));
+  }
+
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("personal-details");
@@ -331,22 +364,22 @@ const CheckoutPage = () => {
                   <div className="space-y-2 border-b pb-5">
                     <div className="flex items-center justify-between">
                       <p>Cart Total</p>
-                      <p>Kes 20,000</p>
+                      <p>Kes {formatPrice(total)}</p>
                     </div>
                     <div className="flex items-center justify-between">
                       <p>Shipping Fee</p>
-                      <p>Kes 1,000</p>
+                      <p>Kes {shippingFee(total)}</p>
                     </div>
                     <div className="flex items-center justify-between">
                       <p>Total</p>
-                      <p>Kes 21,000</p>
+                      <p>Kes {orderTotal(total)}</p>
                     </div>
                   </div>
 
                   <div className="">
                     {/* Provide mpessa paybill details and instructions */}
                     <p className="text-sm text-gray-600">
-                      Pay Kes 21,000 to Paybill 123456 Account 123456 then enter
+                      Pay Kes {orderTotal(total)} to Paybill 123456 Account 123456 then enter
                       the Mpesa code below to complete your order
                     </p>
                   </div>
