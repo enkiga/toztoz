@@ -59,6 +59,7 @@ interface CartItem {
 }
 
 interface Order {
+  id?: string;
   customerName: string;
   customerEmail: string;
   customerMobile: string;
@@ -71,7 +72,9 @@ interface Order {
   orderTotal: number;
   mpesaCode: string;
   orderItem: OrderItem[];
-};
+  createdAt?: string;
+  orderStatus?: string;
+}
 
 interface OrderItem {
   quantity: number;
@@ -95,6 +98,7 @@ interface storeState {
   removeFromCart: (productSlug: string) => void;
   clearCart: () => void;
   createOrder: (order: Order) => Promise<Order>;
+  fetchUserOrders: (email: string) => Promise<Order[]>;
 }
 
 const useStore = create<storeState>()(
@@ -362,6 +366,7 @@ const useStore = create<storeState>()(
                   shippingFee: $shippingFee
                   street: $street
                   itemTotal: $itemTotal
+                  orderStatus: pending
                 }
               ) {
                 createdAt
@@ -415,6 +420,46 @@ const useStore = create<storeState>()(
         );
 
         return createOrder;
+      },
+
+      fetchUserOrders: async (email: string) => {
+        const { orders } = await request<{ orders: Order[] }>(
+          MASTER_URL,
+          gql`
+            query MyQuery {
+              orders(where: { customerEmail: "${email}" }) {
+                city
+                county
+                createdAt
+                customerEmail
+                customerMobile
+                customerName
+                district
+                id
+                itemTotal
+                mpesaCode
+                orderItem {
+                  id
+                  product {
+                    id
+                    productImage {
+                      url
+                    }
+                    productName
+                    productSlug
+                    productPrice
+                  }
+                  quantity
+                }
+                orderStatus
+                orderTotal
+                shippingFee
+                street
+              }
+            }
+          `
+        );
+        return orders;
       },
     }),
     {

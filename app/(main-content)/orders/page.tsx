@@ -1,107 +1,107 @@
+"use client";
+
 import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { useStore } from "@/app/_store/store";
+import { useUser } from "@clerk/nextjs";
 
-type Props = {};
+interface Order {
+  id?: string;
+  customerName: string;
+  customerEmail: string;
+  customerMobile: string;
+  county: string;
+  city: string;
+  district: string;
+  street: string;
+  itemTotal: number;
+  shippingFee: number;
+  orderTotal: number;
+  mpesaCode: string;
+  orderItem: OrderItem[];
+  createdAt?: string;
+  orderStatus?: string;
+}
 
-const CartPage = ({}: Props) => {
+interface OrderItem {
+  quantity: number;
+  product: { id: string };
+}
+
+const CartPage = () => {
+  const { fetchUserOrders } = useStore();
+  const { user } = useUser();
+
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+
+  const { data: orders, isLoading } = useQuery<Order[]>({
+    queryKey: ["userOrders"],
+    queryFn: () => fetchUserOrders(email),
+  });
+
+  // Function to convert 2025-01-30T22:36:00.592689+00:00 to yyyy-mm-dd hr:min format
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleString();
+  };
+
+  // function to read price and convert to string while adding the comma separator
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("en-US");
+  };
+
+  const itemPrice = (price: number, quantity: number) => {
+    return (price * quantity).toLocaleString("en-US");
+  }
+
   return (
     <section className="w-full md:min-h-screen pt-20">
       <div className="w-11/12 mx-auto flex flex-col">
-        <h1 className="font-semibold text-2xl mt-10">Your shopping cart (2)</h1>
-        {/* Table for Cart Products */}
-        <Table className="w-full mt-10">
-          <TableCaption className="text-right my-10">
-            <div className="flex md:flex-col flex-col-reverse items-end gap-5 md:gap-0">
-                <p>Taxes and shipping are calculated at checkout</p>
-                <Button size="lg" className="mt-2 w-fit">Go to checkout</Button>
-            </div>
-          </TableCaption>
-          <TableHeader>
-            <TableRow className="flex gap-10">
-              <TableHead className="flex flex-1 font-semibold">
-                Product
-              </TableHead>
-              <TableHead className="text-center font-semibold hidden md:block">
-                Quantity
-              </TableHead>
-              <TableHead className="text-right font-semibold  hidden md:block">
-                Total
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow className="flex gap-10 items-center">
-              <TableCell className="flex flex-1">
-                <div className="flex flex-1 gap-4">
-                  <Image
-                    src="/CoffeeTable.png"
-                    alt="Product Image"
-                    width={1000}
-                    height={1000}
-                    className="object-cover object-center w-20 h-20"
-                  />
-                  <div className="flex flex-col justify-between md:justify-start">
-                    <h1 className="font-semibold">Coffee Table</h1>
-
-                    <p className="md:hidden">Quantity: 1</p>
-                    <p className="text-gray-500 mt-2">Kes 15,000</p>
-                  </div>
+        <h1 className="font-semibold text-2xl border-b pb-3">
+          Your Orders ({orders?.length})
+        </h1>
+        {isLoading ? (
+          <div className="w-full h-96 flex justify-center items-center">
+            <p>Loading...</p>
+          </div>
+        ) : (
+          <>
+            {orders?.map((order) => (
+              <div key={order.id} className="flex flex-col">
+                <div className="bg-gray-200 rounded-sm p-4 mt-3">
+                  <p className="font-semibold">Order ID: {order.id}</p>
+                  <p>
+                    Order Date:{" "}
+                    <strong>{formatDate(order?.createdAt ?? "")}</strong>
+                  </p>
+                  <p>Status : {order?.orderStatus ?? "Pending"}</p>
                 </div>
-              </TableCell>
-              <TableCell className="text-center  hidden md:block">
                 <div className="">
-                  <p className="">1</p>
+                  {order.orderItem.map((item) => (
+                    <div
+                      key={item.product.id}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <div className="flex items-center space-y-3 space-x-3">
+                        <Image
+                          src={item.product.productImage[0].url}
+                          alt={item.product.productSlug}
+                          width={100}
+                          height={100}
+                          className="rounded-sm object-contain object-center"
+                        />
+                        <p>{item.product.productName}</p>
+                      </div>
+                      <p>Qty: {item.quantity}</p>
+                      <p>Ksh {itemPrice(item.quantity, item.product.productPrice)}</p>
+                    </div>
+                  ))}
                 </div>
-              </TableCell>
-              <TableCell className="text-right  hidden md:block">
-                Kes 15,000
-              </TableCell>
-            </TableRow>
-            <TableRow className="flex gap-10 items-center">
-              <TableCell className="flex flex-1">
-                <div className="flex flex-1 gap-4">
-                  <Image
-                    src="/GlassVase.png"
-                    alt="Product Image"
-                    width={1000}
-                    height={1000}
-                    className="object-cover object-center w-20 h-20"
-                  />
-                  <div className="flex flex-col justify-between md:justify-start">
-                    <h1 className="font-semibold">Glass vase</h1>
-
-                    <p className="md:hidden">Quantity: 1</p>
-                    <p className="text-gray-500 mt-2">Kes 5,000</p>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="text-center  hidden md:block">
-                <div className="">
-                  <p className="">1</p>
-                </div>
-              </TableCell>
-              <TableCell className="text-right  hidden md:block">
-                Kes 5,000
-              </TableCell>
-            </TableRow>
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell className="text-right">Subtotal: <span className="font-semibold text-base">Kes 20,000</span></TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </section>
   );
