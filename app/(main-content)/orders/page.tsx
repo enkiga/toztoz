@@ -27,7 +27,19 @@ interface Order {
 
 interface OrderItem {
   quantity: number;
-  product: { id: string };
+  product: Product;
+}
+
+interface Product {
+  id: string;
+  productName: string;
+  productPrice: number;
+  productImage: [{ url: string }];
+  productDescription: string;
+  productQuantity: number;
+  productSlug: string;
+  productStatus: string;
+  category: [{ categoryName: string; categorySlug: string }];
 }
 
 const CartPage = () => {
@@ -53,7 +65,7 @@ const CartPage = () => {
 
   const itemPrice = (price: number, quantity: number) => {
     return (price * quantity).toLocaleString("en-US");
-  }
+  };
 
   return (
     <section className="w-full md:min-h-screen pt-20">
@@ -81,9 +93,9 @@ const CartPage = () => {
                   {order.orderItem.map((item) => (
                     <div
                       key={item.product.id}
-                      className="flex items-center justify-between py-2"
+                      className="flex flex-col md:flex-row md:items-center justify-between py-2 border-b md:border-0"
                     >
-                      <div className="flex items-center space-y-3 space-x-3">
+                      <div className="flex md:flex-1 items-center space-y-3 space-x-3">
                         <Image
                           src={item.product.productImage[0].url}
                           alt={item.product.productSlug}
@@ -93,10 +105,29 @@ const CartPage = () => {
                         />
                         <p>{item.product.productName}</p>
                       </div>
-                      <p>Qty: {item.quantity}</p>
-                      <p>Ksh {itemPrice(item.quantity, item.product.productPrice)}</p>
+                      <p className="md:flex md:flex-1 hidden">
+                        Qty: {item.quantity}
+                      </p>
+                      <p className="w-full md:w-fit text-right">
+                        Ksh{" "}
+                        {itemPrice(item.quantity, item.product.productPrice)}
+                      </p>
                     </div>
                   ))}
+                  <div className="flex flex-col my-5 md:border-t pt-3 space-y-2">
+                    <div className="flex flex-1 justify-between">
+                      <p>Item Total</p>
+                      <p>Ksh {formatPrice(order.itemTotal)}</p>
+                    </div>
+                    <div className="flex flex-1 justify-between">
+                      <p>Shipping Fee</p>
+                      <p>Ksh {formatPrice(order.shippingFee)}</p>
+                    </div>
+                    <div className="flex flex-1 justify-between border-t pt-3">
+                      <p>Subtotal</p>
+                      <p>Ksh {formatPrice(order.orderTotal)}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

@@ -78,7 +78,7 @@ interface Order {
 
 interface OrderItem {
   quantity: number;
-  product: { id: string };
+  product: Product;
 }
 
 interface storeState {
@@ -116,14 +116,7 @@ const useStore = create<storeState>()(
         city: "",
         district: "",
         street: "",
-        orderItem: [
-          {
-            quantity: 0,
-            product: {
-              id: "",
-            },
-          },
-        ],
+        orderItem: [],
         itemTotal: 0,
         shippingFee: 0,
         orderTotal: 0,
