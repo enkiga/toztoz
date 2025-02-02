@@ -235,62 +235,65 @@ const ShopListing = () => {
 
         {/* Pagination */}
 
-        <Pagination className="my-4">
-          <PaginationContent>
-            <PaginationItem>
-              <Button
-                variant="secondary"
-                onClick={handlePrevious}
-                disabled={!data?.pageInfo?.hasPreviousPage}
-              >
-                <ChevronLeft />
-                Previous
-              </Button>
-            </PaginationItem>
-
-            {/* Display page numbers */}
-            {Array.from(
-              { length: Math.ceil((data?.aggregate.count || 0) / 8) },
-              (_, i) => i + 1
-            ).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  isActive={page === currentPage}
-                  onClick={() => {
-                    if (page === currentPage) return;
-                    if (page > currentPage) {
-                      // Handle forward navigation
-                      setVariables({
-                        first: 8 * (page - currentPage),
-                        after: data?.pageInfo.endCursor || null,
-                      });
-                    } else {
-                      // Handle backward navigation
-                      setVariables({
-                        last: 8 * (currentPage - page),
-                        before: data?.pageInfo.startCursor || null,
-                      });
-                    }
-                    setCurrentPage(page);
-                  }}
+        {/* Pagination - Only show if more than one page exists */}
+        {data?.aggregate?.count && Math.ceil(data.aggregate.count / 8) > 1 && (
+          <Pagination className="my-4">
+            <PaginationContent>
+              <PaginationItem>
+                <Button
+                  variant="secondary"
+                  onClick={handlePrevious}
+                  disabled={!data?.pageInfo?.hasPreviousPage}
                 >
-                  {page}
-                </PaginationLink>
+                  <ChevronLeft />
+                  Previous
+                </Button>
               </PaginationItem>
-            ))}
 
-            <PaginationItem>
-              <Button
-                variant="secondary"
-                onClick={handleNext}
-                disabled={!data?.pageInfo?.hasNextPage}
-              >
-                Next
-                <ChevronRight />
-              </Button>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              {/* Display page numbers */}
+              {Array.from(
+                { length: Math.ceil((data?.aggregate.count || 0) / 8) },
+                (_, i) => i + 1
+              ).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    isActive={page === currentPage}
+                    onClick={() => {
+                      if (page === currentPage) return;
+                      if (page > currentPage) {
+                        // Handle forward navigation
+                        setVariables({
+                          first: 8 * (page - currentPage),
+                          after: data?.pageInfo.endCursor || null,
+                        });
+                      } else {
+                        // Handle backward navigation
+                        setVariables({
+                          last: 8 * (currentPage - page),
+                          before: data?.pageInfo.startCursor || null,
+                        });
+                      }
+                      setCurrentPage(page);
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <Button
+                  variant="secondary"
+                  onClick={handleNext}
+                  disabled={!data?.pageInfo?.hasNextPage}
+                >
+                  Next
+                  <ChevronRight />
+                </Button>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </section>
   );
