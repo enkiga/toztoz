@@ -535,24 +535,24 @@ const useStore = create<storeState>()(
           before?: any;
         }
       ) => {
-        const { productsCategoryConnection } = await request<{
-          productsCategoryConnection: ProductsConnection;
+        const { productsConnection } = await request<{
+          productsConnection: ProductsConnection;
         }>(
           MASTER_URL,
           gql`
             query MyQuery(
+              $categorySlug: String!
               $first: Int
-              $last: Int
               $after: String
               $before: String
-              $categorySlug: String!
+              $last: Int
             ) {
               productsConnection(
                 first: $first
-                last: $last
+                where: { category_every: { categorySlug: $categorySlug } }
                 after: $after
                 before: $before
-                where: { category_some: { categorySlug: $categorySlug } }
+                last: $last
               ) {
                 aggregate {
                   count
@@ -582,9 +582,12 @@ const useStore = create<storeState>()(
               }
             }
           `,
-          { ...variables, categorySlug }
+          {
+            categorySlug,
+            ...variables,
+          }
         );
-        return productsCategoryConnection;
+        return productsConnection;
       },
     }),
     {

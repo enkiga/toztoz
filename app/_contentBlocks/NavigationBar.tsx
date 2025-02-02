@@ -230,7 +230,7 @@ const Cart = () => {
             <p className="text-center text-gray-500">Your cart is empty</p>
           </div>
         ) : (
-          <ScrollArea className=" h-80 w-full pr-4 my-4">
+          <ScrollArea className="h-3/6 md:h-80 w-full pr-4 my-4">
             {cartItem.map((item) => (
               <div
                 className="flex flex-col gap-3 py-4"

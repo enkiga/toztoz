@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/pagination";
 import { useStore } from "@/app/_store/store";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Products {
   id: string;
@@ -131,24 +133,19 @@ const ShopListing = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { isPending, data, isError, error } = useQuery<ProductsConnection>({
-    // check if categorySlug is all-products tehn fetch all products else not fetch product by category
+  // usequery to fetch products
+  const { data, isPending, isError, error } = useQuery<ProductsConnection>({
     queryKey: [categorySlug, variables],
-    queryFn: async (): Promise<ProductsConnection> => {
-      let productsConnection: ProductsConnection;
+    queryFn: () => {
       if (categorySlug === "all-products") {
-        productsConnection = await fetchProductsConnection(variables);
+        return fetchProductsConnection(variables);
       } else {
-        productsConnection = await fetchProductByCategoryConnection(
-          categorySlug,
-          {...variables}
-        );
+        return fetchProductByCategoryConnection(categorySlug, variables);
       }
-      return productsConnection;
     },
-    placeholderData: keepPreviousData,
-    staleTime: 5000,
   });
+
+  console.log(data);
 
   const handleNext = () => {
     if (!data?.pageInfo?.endCursor) return;
@@ -167,8 +164,6 @@ const ShopListing = () => {
     });
     setCurrentPage((prev) => prev - 1);
   };
-
-  console.log(categories);
 
   return (
     <section className="w-full md:min-h-screen">
@@ -239,61 +234,63 @@ const ShopListing = () => {
         </div>
 
         {/* Pagination */}
-        <div className="mt-8">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={handlePrevious}
-                  aria-disabled={
-                    !data?.pageInfo?.hasPreviousPage || currentPage === 1
-                  }
-                />
-              </PaginationItem>
 
-              {/* Display page numbers */}
-              {Array.from(
-                { length: Math.ceil((data?.aggregate.count || 0) / 8) },
-                (_, i) => i + 1
-              ).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    isActive={page === currentPage}
-                    onClick={() => {
-                      if (page === currentPage) return;
-                      if (page > currentPage) {
-                        // Handle forward navigation
-                        setVariables({
-                          first: 8 * (page - currentPage),
-                          after: data?.pageInfo.endCursor || null,
-                        });
-                      } else {
-                        // Handle backward navigation
-                        setVariables({
-                          last: 8 * (currentPage - page),
-                          before: data?.pageInfo.startCursor || null,
-                        });
-                      }
-                      setCurrentPage(page);
-                    }}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+        <Pagination className="my-4">
+          <PaginationContent>
+            <PaginationItem>
+              <Button
+                variant="secondary"
+                onClick={handlePrevious}
+                disabled={!data?.pageInfo?.hasPreviousPage}
+              >
+                <ChevronLeft />
+                Previous
+              </Button>
+            </PaginationItem>
 
-              <PaginationItem>
-                <PaginationNext
-                  onClick={handleNext}
-                  aria-disabled={
-                    !data?.pageInfo?.hasNextPage
-                  }
-                  className="disabled:opacity-50"
-                />
+            {/* Display page numbers */}
+            {Array.from(
+              { length: Math.ceil((data?.aggregate.count || 0) / 8) },
+              (_, i) => i + 1
+            ).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  isActive={page === currentPage}
+                  onClick={() => {
+                    if (page === currentPage) return;
+                    if (page > currentPage) {
+                      // Handle forward navigation
+                      setVariables({
+                        first: 8 * (page - currentPage),
+                        after: data?.pageInfo.endCursor || null,
+                      });
+                    } else {
+                      // Handle backward navigation
+                      setVariables({
+                        last: 8 * (currentPage - page),
+                        before: data?.pageInfo.startCursor || null,
+                      });
+                    }
+                    setCurrentPage(page);
+                  }}
+                >
+                  {page}
+                </PaginationLink>
               </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+            ))}
+
+            <PaginationItem>
+              <Button
+                variant="secondary"
+                onClick={handleNext}
+                disabled={!data?.pageInfo?.hasNextPage}
+              >
+                Next
+                <ChevronRight />
+              </Button>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </section>
   );
