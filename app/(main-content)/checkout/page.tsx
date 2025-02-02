@@ -30,6 +30,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Order {
+  id?: string;
   customerName: string;
   customerEmail: string;
   customerMobile: string;
@@ -42,11 +43,25 @@ interface Order {
   orderTotal: number;
   mpesaCode: string;
   orderItem: OrderItem[];
+  createdAt?: string;
+  orderStatus?: string;
 }
 
 interface OrderItem {
   quantity: number;
-  product: { id: string };
+  product: Product;
+}
+
+interface Product {
+  id: string;
+  productName: string;
+  productPrice: number;
+  productImage: [{ url: string }];
+  productDescription: string;
+  productQuantity: number;
+  productSlug: string;
+  productStatus: string;
+  category: [{ categoryName: string; categorySlug: string }];
 }
 
 // Step 1: Split schema into individual step schemas
@@ -144,6 +159,14 @@ const CheckoutPage = () => {
           quantity: item.selectedQuantity,
           product: {
             id: item.product.id,
+            productName: item.product.productName,
+            productPrice: item.product.productPrice,
+            productImage: item.product.productImage,
+            productDescription: item.product.productDescription,
+            productQuantity: item.product.productQuantity,
+            productSlug: item.product.productSlug,
+            productStatus: item.product.productStatus,
+            category: item.product.category,
           },
         })),
       };
@@ -212,6 +235,14 @@ const CheckoutPage = () => {
         quantity: item.selectedQuantity,
         product: {
           id: item.product.id,
+          productName: item.product.productName,
+          productPrice: item.product.productPrice,
+          productImage: item.product.productImage,
+          productDescription: item.product.productDescription,
+          productQuantity: item.product.productQuantity,
+          productSlug: item.product.productSlug,
+          productStatus: item.product.productStatus,
+          category: item.product.category,
         },
       })),
     };
