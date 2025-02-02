@@ -14,6 +14,7 @@ type Props = {
   Price: string;
   slug: string;
   category: string;
+  
 };
 
 const ProductCard = ({ Img, Name, Price, category, slug }: Props) => {

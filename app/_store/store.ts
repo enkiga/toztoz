@@ -25,19 +25,19 @@ interface Product {
 
 interface PageInfo {
   hasNextPage: boolean;
-  endCursor: string | null;
+  endCursor: string;
   hasPreviousPage: boolean;
-  startCursor: string | null;
+  startCursor: string;
+  pageSize: number;
 }
 
 interface ProductsConnection {
-  edges: { node: Product }[];
+  edges: {
+    cursor: string;
+    node: Product;
+  }[];
   pageInfo: PageInfo;
   aggregate: { count: number };
-}
-
-interface ProductsQueryData {
-  productsConnection: ProductsConnection;
 }
 
 interface Category {
@@ -89,9 +89,24 @@ interface storeState {
   order: Order;
   orderItem: OrderItem[];
   fetchProducts: () => Promise<Product[]>;
+  fetchProductsConnection: (variables: {
+    first?: number;
+    after?: any;
+    last?: number;
+    before?: any;
+  }) => Promise<ProductsConnection>;
   fetchListProducts: (count: number) => Promise<Product[]>;
   fetchProductPreview: (count: number) => Promise<Product[]>;
   fetchProductByCategory: (categorySlug: string) => Promise<Product[]>;
+  fetchProductByCategoryConnection: (
+    categorySlug: string,
+    variables: {
+      first?: number;
+      after?: any;
+      last?: number;
+      before?: any;
+    }
+  ) => Promise<ProductsConnection>;
   fetchCategories: () => Promise<Category[]>;
   fetchProductBySlug: (productSlug: string) => Promise<Product>;
   addToCart: (product: Product, selectedQuantity: number) => void;
@@ -453,6 +468,123 @@ const useStore = create<storeState>()(
           `
         );
         return orders;
+      },
+
+      fetchProductsConnection: async (variables: {
+        first?: number;
+        after?: any;
+        last?: number;
+        before?: any;
+      }) => {
+        const { productsConnection } = await request<{
+          productsConnection: ProductsConnection;
+        }>(
+          MASTER_URL,
+          gql`
+            query MyQuery(
+              $first: Int
+              $last: Int
+              $after: String
+              $before: String
+            ) {
+              productsConnection(
+                first: $first
+                last: $last
+                after: $after
+                before: $before
+              ) {
+                aggregate {
+                  count
+                }
+                pageInfo {
+                  hasNextPage
+                  hasPreviousPage
+                  pageSize
+                  endCursor
+                  startCursor
+                }
+                edges {
+                  cursor
+                  node {
+                    id
+                    productImage {
+                      url
+                    }
+                    productName
+                    productPrice
+                    productSlug
+                    category {
+                      categorySlug
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          variables
+        );
+        return productsConnection;
+      },
+
+      fetchProductByCategoryConnection: async (
+        categorySlug: string,
+        variables: {
+          first?: number;
+          after?: any;
+          last?: number;
+          before?: any;
+        }
+      ) => {
+        const { productsCategoryConnection } = await request<{
+          productsCategoryConnection: ProductsConnection;
+        }>(
+          MASTER_URL,
+          gql`
+            query MyQuery(
+              $first: Int
+              $last: Int
+              $after: String
+              $before: String
+              $categorySlug: String!
+            ) {
+              productsConnection(
+                first: $first
+                last: $last
+                after: $after
+                before: $before
+                where: { category_some: { categorySlug: $categorySlug } }
+              ) {
+                aggregate {
+                  count
+                }
+                pageInfo {
+                  hasNextPage
+                  hasPreviousPage
+                  pageSize
+                  endCursor
+                  startCursor
+                }
+                edges {
+                  cursor
+                  node {
+                    id
+                    productImage {
+                      url
+                    }
+                    productName
+                    productPrice
+                    productSlug
+                    category {
+                      categorySlug
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          { ...variables, categorySlug }
+        );
+        return productsCategoryConnection;
       },
     }),
     {

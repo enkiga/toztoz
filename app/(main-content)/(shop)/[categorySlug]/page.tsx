@@ -11,6 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useStore } from "@/app/_store/store";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
@@ -37,18 +45,20 @@ interface PageInfo {
 }
 
 interface ProductsConnection {
-  edges: { node: Products }[];
+  edges: {
+    cursor: string;
+    node: Products;
+  }[];
   pageInfo: PageInfo;
   aggregate: { count: number };
 }
 
-interface ProductsQueryData {
-  productsConnection: ProductsConnection;
-}
-
 const ShopListing = () => {
-  const { fetchCategories, fetchProductByCategory, fetchListProducts } =
-    useStore();
+  const {
+    fetchCategories,
+    fetchProductsConnection,
+    fetchProductByCategoryConnection,
+  } = useStore();
 
   const params = useParams<{ categorySlug: string }>();
   const categorySlug = params.categorySlug;
@@ -58,12 +68,9 @@ const ShopListing = () => {
     queryFn: fetchCategories,
   });
 
-  //   from params.categorySlug, get the category name
   const category = categories?.find(
     (category) => category.categorySlug === categorySlug
   );
-
-  // assign filtered products to data based on filters selected
 
   // Get Price then convert to string while adding the comma separator
   const formatPrice = (price: number) => {
@@ -115,48 +122,53 @@ const ShopListing = () => {
     },
   ];
 
-  const [page, setPage] = useState(1);
+  const [variables, setVariables] = useState<{
+    first?: number;
+    after?: string | null;
+    last?: number;
+    before?: string | null;
+  }>({ first: 8 });
 
-  const pageSize = 8;
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const { isPending, data, isError, error, isFetching, isPlaceholderData } =
-    useQuery<ProductsQueryData[]>({
-      // check if categorySlug is all-products tehn fetch all products else not fetch product by category
-      queryKey: ["products", categorySlug, page],
-      queryFn: async (): Promise<ProductsQueryData[]> => {
-        let products: Products[];
-        if (categorySlug === "all-products") {
-          products = await fetchListProducts(pageSize * page);
-        } else {
-          products = await fetchProductByCategory(categorySlug);
-        }
-        return [
-          {
-            productsConnection: {
-              edges: products.map((product) => ({ node: product })),
-              pageInfo: {
-                hasNextPage: products.length === pageSize,
-                endCursor:
-                  products.length > 0 ? products[products.length - 1].id : null,
-                hasPreviousPage: page > 1,
-                // set startCursor to null if page is 1 else set to the first product id
-                startCursor: page === 1 ? null : products[0].id,
-              },
-              aggregate: {
-                count: data?.[0]?.productsConnection?.aggregate?.count || 0,
-              },
-            },
-          },
-        ];
-      },
-      placeholderData: keepPreviousData,
-      staleTime: 5000,
+  const { isPending, data, isError, error } = useQuery<ProductsConnection>({
+    // check if categorySlug is all-products tehn fetch all products else not fetch product by category
+    queryKey: [categorySlug, variables],
+    queryFn: async (): Promise<ProductsConnection> => {
+      let productsConnection: ProductsConnection;
+      if (categorySlug === "all-products") {
+        productsConnection = await fetchProductsConnection(variables);
+      } else {
+        productsConnection = await fetchProductByCategoryConnection(
+          categorySlug,
+          {...variables}
+        );
+      }
+      return productsConnection;
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 5000,
+  });
+
+  const handleNext = () => {
+    if (!data?.pageInfo?.endCursor) return;
+    setVariables({
+      first: 8,
+      after: data.pageInfo.endCursor ?? null,
     });
+    setCurrentPage((prev) => prev + 1);
+  };
 
-  // Calculate total number of pages based on aggregate count and page size
-  const totalPages = Math.ceil(
-    (data?.[0]?.productsConnection?.aggregate?.count || 0) / pageSize
-  );
+  const handlePrevious = () => {
+    if (!data?.pageInfo?.startCursor) return;
+    setVariables({
+      last: 8,
+      before: data.pageInfo.startCursor ?? null,
+    });
+    setCurrentPage((prev) => prev - 1);
+  };
+
+  console.log(categories);
 
   return (
     <section className="w-full md:min-h-screen">
@@ -213,21 +225,75 @@ const ShopListing = () => {
           ) : isError ? (
             <p>Error {error.message}</p>
           ) : (
-            data?.[0].productsConnection.edges.map(({ node: product }) => (
+            data?.edges.map(({ node }) => (
               <ProductCard
-                key={product.id}
-                slug={product.productSlug}
-                category={product.category[0].categorySlug || "all-products"}
-                Img={product.productImage[0].url}
-                Name={product.productName}
-                Price={formatPrice(product.productPrice)}
+                key={node.id}
+                slug={node.productSlug}
+                category={node.category[0].categorySlug}
+                Img={node.productImage[0].url}
+                Name={node.productName}
+                Price={formatPrice(node.productPrice)}
               />
             ))
           )}
         </div>
 
         {/* Pagination */}
-        
+        <div className="mt-8">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={handlePrevious}
+                  aria-disabled={
+                    !data?.pageInfo?.hasPreviousPage || currentPage === 1
+                  }
+                />
+              </PaginationItem>
+
+              {/* Display page numbers */}
+              {Array.from(
+                { length: Math.ceil((data?.aggregate.count || 0) / 8) },
+                (_, i) => i + 1
+              ).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    isActive={page === currentPage}
+                    onClick={() => {
+                      if (page === currentPage) return;
+                      if (page > currentPage) {
+                        // Handle forward navigation
+                        setVariables({
+                          first: 8 * (page - currentPage),
+                          after: data?.pageInfo.endCursor || null,
+                        });
+                      } else {
+                        // Handle backward navigation
+                        setVariables({
+                          last: 8 * (currentPage - page),
+                          before: data?.pageInfo.startCursor || null,
+                        });
+                      }
+                      setCurrentPage(page);
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={handleNext}
+                  aria-disabled={
+                    !data?.pageInfo?.hasNextPage
+                  }
+                  className="disabled:opacity-50"
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </section>
   );
