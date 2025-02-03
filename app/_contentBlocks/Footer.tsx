@@ -29,24 +29,9 @@ const Footer = () => {
       <div className=" w-11/12 mx-auto flex flex-wrap justify-between py-2 border-b">
         {/* Links */}
         <div className="w-full md:w-2/3 flex flex-wrap justify-between">
-          {/* Menu */}
-          <div className="w-1/2 md:w-1/3 flex flex-col items-start">
-            <h1 className="text-xl font-semibold underline mb-1">Shop</h1>
-            <ul className="text-sm flex flex-col gap-2">
-              <li>
-                <Link href="/new-arrivals">New Arrivals</Link>
-              </li>
-              <li>
-                <Link href="/best-seller">Best Seller</Link>
-              </li>
-              <li>
-                <Link href="/products">All Products</Link>
-              </li>
-            </ul>
-          </div>
-
+          
           {/* Categories */}
-          <div className="w-1/2 md:w-1/3 flex flex-col items-start">
+          <div className="w-1/2 flex flex-col items-start px-1">
             <h1 className="text-xl font-semibold underline mb-1">Categories</h1>
             <ul className="text-sm flex flex-col gap-2">
               <li>
@@ -63,7 +48,7 @@ const Footer = () => {
           </div>
 
           {/* About Us */}
-          <div className="w-1/2 md:w-1/3 flex flex-col items-start">
+          <div className="w-1/2 flex flex-col items-start px-1">
             <h1 className="text-xl font-semibold underline mb-1">
               Our Company
             </h1>
