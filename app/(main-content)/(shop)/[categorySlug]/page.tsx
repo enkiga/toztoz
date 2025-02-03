@@ -16,8 +16,6 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useStore } from "@/app/_store/store";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -81,6 +79,7 @@ const ShopListing = () => {
 
   // Filtering and Sorting
   const priceFilter = [
+    { value: "price0", label: "All Prices", min: 0, max: 1000000 },
     { value: "price1", label: "Kes 0 - Kes 1000", min: 0, max: 1000 },
     { value: "price2", label: "Kes 1001 - Kes 5000", min: 1001, max: 5000 },
     { value: "price3", label: "Kes 5001 - Kes 10000", min: 5001, max: 10000 },
@@ -101,27 +100,17 @@ const ShopListing = () => {
 
   const sortFilter = [
     {
-      value: "sort1",
+      value: "PriceAsc",
       label: "Price: Low to High",
-      sortFn: (a: Products, b: Products) => a.productPrice - b.productPrice,
+      sortFn: "productPrice_ASC",
     },
     {
-      value: "sort2",
+      value: "PriceDesc",
       label: "Price: High to Low",
-      sortFn: (a: Products, b: Products) => b.productPrice - a.productPrice,
+      sortFn: "productPrice_DESC",
     },
-    {
-      value: "sort3",
-      label: "Product: A to Z",
-      sortFn: (a: Products, b: Products) =>
-        a.productName.localeCompare(b.productName),
-    },
-    {
-      value: "sort4",
-      label: "Product: Z to A",
-      sortFn: (a: Products, b: Products) =>
-        b.productName.localeCompare(a.productName),
-    },
+    { value: "ProdAsc", label: "Name: A to Z", sortFn: "productName_ASC" },
+    { value: "ProdDesc", label: "Name: Z to A", sortFn: "productName_DESC" },
   ];
 
   const [variables, setVariables] = useState<{
@@ -129,7 +118,10 @@ const ShopListing = () => {
     after?: string | null;
     last?: number;
     before?: string | null;
-  }>({ first: 8 });
+    productPrice_gte?: number;
+    productPrice_lte?: number;
+    orderBy?: string | null;
+  }>({ first: 8, productPrice_lte: 1000000, productPrice_gte: 0 });
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -145,24 +137,59 @@ const ShopListing = () => {
     },
   });
 
-  console.log(data);
-
   const handleNext = () => {
     if (!data?.pageInfo?.endCursor) return;
-    setVariables({
+    setVariables((prev) => ({
+      ...prev, // Preserve existing filters
       first: 8,
       after: data.pageInfo.endCursor ?? null,
-    });
+      last: undefined, // Clear "last" when moving forward
+      before: undefined, // Clear "before" when moving forward
+    }));
     setCurrentPage((prev) => prev + 1);
   };
 
   const handlePrevious = () => {
     if (!data?.pageInfo?.startCursor) return;
-    setVariables({
+    setVariables((prev) => ({
+      ...prev, // Preserve existing filters
       last: 8,
       before: data.pageInfo.startCursor ?? null,
-    });
+      first: undefined, // Clear "first" when moving backward
+      after: undefined, // Clear "after" when moving backward
+    }));
     setCurrentPage((prev) => prev - 1);
+  };
+
+  // Create filter handlers
+  const handlePriceFilter = (value: string) => {
+    const filter = priceFilter.find((f) => f.value === value);
+    setVariables((prev) => ({
+      ...prev,
+      productPrice_gte: filter?.min,
+      productPrice_lte: filter?.max,
+      first: 8,
+      // Reset pagination when filter changes
+      after: null,
+      before: null,
+    }));
+    setCurrentPage(1);
+  };
+
+  const handleSortFilter = (value: string) => {
+    const sortMap = sortFilter.find((f) => f.value === value);
+    setVariables((prev) => ({
+      ...prev,
+      orderBy:
+        sortMap?.value !== "ProdAsc" // Exclude for "All Prices"
+          ? sortMap?.sortFn
+          : null,
+      // Reset pagination when sort changes
+      first: 8,
+      after: null,
+      before: null,
+    }));
+    setCurrentPage(1);
   };
 
   return (
@@ -182,7 +209,7 @@ const ShopListing = () => {
           {/* Product Filters */}
           <div className="flex space-x-4">
             {/* Price Filter */}
-            <Select>
+            <Select onValueChange={handlePriceFilter} defaultValue="price0">
               <SelectTrigger>
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
@@ -198,7 +225,7 @@ const ShopListing = () => {
 
           {/* Sorting Filter */}
           <div className="">
-            <Select>
+            <Select onValueChange={handleSortFilter} defaultValue="ProdAsc">
               <SelectTrigger>
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
@@ -219,6 +246,11 @@ const ShopListing = () => {
             <div className="">Loading ...</div>
           ) : isError ? (
             <p>Error {error.message}</p>
+          ) : data?.edges.length === 0 ? (
+            <p>
+              No products found. Please try a different filter or check back
+              later.
+            </p>
           ) : (
             data?.edges.map(({ node }) => (
               <ProductCard
@@ -260,19 +292,27 @@ const ShopListing = () => {
                     isActive={page === currentPage}
                     onClick={() => {
                       if (page === currentPage) return;
-                      if (page > currentPage) {
-                        // Handle forward navigation
-                        setVariables({
-                          first: 8 * (page - currentPage),
-                          after: data?.pageInfo.endCursor || null,
-                        });
-                      } else {
-                        // Handle backward navigation
-                        setVariables({
-                          last: 8 * (currentPage - page),
-                          before: data?.pageInfo.startCursor || null,
-                        });
-                      }
+
+                      setVariables((prev) => ({
+                        ...prev, // Preserve existing filters
+                        first:
+                          page > currentPage
+                            ? 8 * (page - currentPage)
+                            : undefined,
+                        after:
+                          page > currentPage
+                            ? data?.pageInfo.endCursor || null
+                            : undefined,
+                        last:
+                          page < currentPage
+                            ? 8 * (currentPage - page)
+                            : undefined,
+                        before:
+                          page < currentPage
+                            ? data?.pageInfo.startCursor || null
+                            : undefined,
+                      }));
+
                       setCurrentPage(page);
                     }}
                   >
@@ -280,6 +320,7 @@ const ShopListing = () => {
                   </PaginationLink>
                 </PaginationItem>
               ))}
+              {/* Next button */}
 
               <PaginationItem>
                 <Button

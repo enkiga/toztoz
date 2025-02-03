@@ -94,6 +94,9 @@ interface storeState {
     after?: any;
     last?: number;
     before?: any;
+    productPrice_gte?: number;
+    productPrice_lte?: number;
+    orderBy?: any;
   }) => Promise<ProductsConnection>;
   fetchListProducts: (count: number) => Promise<Product[]>;
   fetchProductPreview: (count: number) => Promise<Product[]>;
@@ -105,6 +108,9 @@ interface storeState {
       after?: any;
       last?: number;
       before?: any;
+      productPrice_gte?: number;
+      productPrice_lte?: number;
+      orderBy?: any;
     }
   ) => Promise<ProductsConnection>;
   fetchCategories: () => Promise<Category[]>;
@@ -475,6 +481,9 @@ const useStore = create<storeState>()(
         after?: any;
         last?: number;
         before?: any;
+        productPrice_gte?: number;
+        productPrice_lte?: number;
+        orderBy?: any;
       }) => {
         const { productsConnection } = await request<{
           productsConnection: ProductsConnection;
@@ -486,12 +495,20 @@ const useStore = create<storeState>()(
               $last: Int
               $after: String
               $before: String
+              $productPrice_gte: Int
+              $productPrice_lte: Int
+              $orderBy: ProductOrderByInput
             ) {
               productsConnection(
                 first: $first
                 last: $last
                 after: $after
                 before: $before
+                where: {
+                  productPrice_gte: $productPrice_gte
+                  productPrice_lte: $productPrice_lte
+                }
+                orderBy: $orderBy
               ) {
                 aggregate {
                   count
@@ -533,6 +550,9 @@ const useStore = create<storeState>()(
           after?: any;
           last?: number;
           before?: any;
+          productPrice_gte?: number;
+          productPrice_lte?: number;
+          orderBy?: any;
         }
       ) => {
         const { productsConnection } = await request<{
@@ -546,13 +566,21 @@ const useStore = create<storeState>()(
               $after: String
               $before: String
               $last: Int
+              $productPrice_gte: Int
+              $productPrice_lte: Int
+              $orderBy: ProductOrderByInput
             ) {
               productsConnection(
                 first: $first
-                where: { category_every: { categorySlug: $categorySlug } }
+                where: {
+                  category_every: { categorySlug: $categorySlug }
+                  productPrice_gte: $productPrice_gte
+                  productPrice_lte: $productPrice_lte
+                }
                 after: $after
                 before: $before
                 last: $last
+                orderBy: $orderBy
               ) {
                 aggregate {
                   count
