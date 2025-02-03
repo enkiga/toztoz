@@ -628,13 +628,20 @@ const useStore = create<storeState>()(
               products(
                 where: {
                   OR: [
-                    {productName_contains: $searchTerm}
-                    {productSlug_contains: $searchTerm}
-                    {productDescription_contains: $searchTerm}
-                    {category_some: { categorySlug_contains: $searchTerm }}
+                    { productName_contains: $searchTerm }
+                    { productSlug_contains: $searchTerm }
+                    { productDescription_contains: $searchTerm }
+                    {
+                      category_some: {
+                        OR: [
+                          { categoryName_contains: $searchTerm }
+                          { categorySlug_contains: $searchTerm }
+                        ]
+                      }
+                    }
                   ]
                 }
-                  first: 10
+                first: 10
               ) {
                 id
                 productName

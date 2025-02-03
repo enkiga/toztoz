@@ -5,7 +5,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import { DialogHeader } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
@@ -15,7 +14,31 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useDebounce } from "@/app/_hooks/useDebounce";
 
+interface Product {
+  id: string;
+  productName: string;
+  productPrice: number;
+  productImage: [{ url: string }];
+  productDescription: string;
+  productQuantity: number;
+  productSlug: string;
+  productStatus: string;
+  category: [{ categoryName: string; categorySlug: string }];
+}
+
 const SearchBox = () => {
+  interface Product {
+    id: string;
+    productName: string;
+    productPrice: number;
+    productImage: [{ url: string }];
+    productDescription: string;
+    productQuantity: number;
+    productSlug: string;
+    productStatus: string;
+    category: [{ categoryName: string; categorySlug: string }];
+  }
+
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -23,11 +46,16 @@ const SearchBox = () => {
   const { searchProducts } = useStore();
 
   // Fetch Products
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["products", debouncedSearchTerm],
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["serachProducts", debouncedSearchTerm],
     queryFn: () => searchProducts(debouncedSearchTerm),
-    enabled: debouncedSearchTerm.length > 2,
+    enabled: debouncedSearchTerm.length >= 1,
   });
+
+  // Add error fallback for missing category
+  const getCategorySlug = (product: Product) => {
+    return product.category?.[0]?.categorySlug || "unknown-category";
+  };
   return (
     <>
       <SearchIcon size={16} onClick={() => setIsOpen(true)} />
@@ -46,8 +74,8 @@ const SearchBox = () => {
           <CommandEmpty>
             {isError
               ? "Error searching products"
-              : debouncedSearchTerm.length < 2
-              ? "Type at least 2 characters"
+              : debouncedSearchTerm.length < 1
+              ? "Type at least 1 characters"
               : "No products found"}
           </CommandEmpty>
           {!isLoading && data && data.length > 0 && (
