@@ -121,7 +121,12 @@ const ShopListing = () => {
     productPrice_gte?: number;
     productPrice_lte?: number;
     orderBy?: string | null;
-  }>({ first: 8, productPrice_lte: 1000000, productPrice_gte: 0 });
+  }>({
+    first: 8,
+    productPrice_lte: 1000000,
+    productPrice_gte: 0,
+    orderBy: "productName_ASC",
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -180,10 +185,7 @@ const ShopListing = () => {
     const sortMap = sortFilter.find((f) => f.value === value);
     setVariables((prev) => ({
       ...prev,
-      orderBy:
-        sortMap?.value !== "ProdAsc" // Exclude for "All Prices"
-          ? sortMap?.sortFn
-          : null,
+      orderBy: sortMap?.sortFn,
       // Reset pagination when sort changes
       first: 8,
       after: null,

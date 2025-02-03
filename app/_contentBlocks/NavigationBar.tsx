@@ -63,6 +63,7 @@ import { SignInButton, useUser, SignOutButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
+import SearchBox from "./SearchBox";
 
 interface Categories {
   id: string;
@@ -134,14 +135,14 @@ const NavigationBar = () => {
           </NavigationMenu>
           {/* Search, Cart & User Profile */}
           <div className="hidden md:flex flex-row items-center gap-3">
-            <Search />
+            <SearchBox />
             <Cart />
             {isLoaded && user ? <UserProfile user={user} /> : <SignInButton />}
           </div>
 
           {/* Bar Icon for Mobile View */}
           <div className="flex flex-row gap-4 md:hidden">
-            <Search />
+            <SearchBox />
             <Cart />
             <MobileNav query={query} />
           </div>
@@ -298,47 +299,6 @@ const Cart = () => {
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  );
-};
-
-// Search View
-const Search = () => {
-  const [isOpen, setIsOpen] = React.useState(false);
-
-  //   Set isOpen to true when the SearchIcon is clicked
-
-  return (
-    <>
-      <SearchIcon size={16} onClick={() => setIsOpen(true)} />
-
-      <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogHeader>
-          <DialogTitle aria-describedby="search-title"></DialogTitle>
-        </DialogHeader>
-        <CommandInput placeholder="Type to search..." />
-        <CommandList>
-          <CommandEmpty>No Result Found</CommandEmpty>
-
-          <CommandSeparator />
-
-          <CommandGroup heading="Categories">
-            <CommandItem>Shoes</CommandItem>
-            <CommandItem>Shirts</CommandItem>
-            <CommandItem>Pants</CommandItem>
-          </CommandGroup>
-
-          <CommandSeparator />
-
-          <CommandGroup heading="Products">
-            <CommandItem>Product 1</CommandItem>
-            <CommandItem>Product 2</CommandItem>
-            <CommandItem>Product 3</CommandItem>
-          </CommandGroup>
-
-          <CommandSeparator />
-        </CommandList>
-      </CommandDialog>
-    </>
   );
 };
 

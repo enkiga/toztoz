@@ -22,7 +22,7 @@ interface Props {
   count: number;
 }
 
-const ProductListing = ({title, count}: Props) => {
+const ProductListing = ({ title, count }: Props) => {
   const { fetchProductPreview } = useStore();
 
   // Fetching first 8 products
@@ -46,7 +46,7 @@ const ProductListing = ({title, count}: Props) => {
         {isLoading
           ? Array.from({ length: count }).map((_, index) => (
               <div
-                key={index}
+                key={`skeleton-${index}`}
                 className="w-1/2 md:w-1/4 px-2 py-4 flex flex-col items-start"
               >
                 <div className="flex flex-col space-y-3">
@@ -60,14 +60,14 @@ const ProductListing = ({title, count}: Props) => {
             ))
           : data?.map((product) => (
               <ProductCard
-                key={product.id}
+                key={`product-${product.id}`}
                 slug={product.productSlug}
                 category={product.category[0].categorySlug}
                 Img={product.productImage[0].url}
                 Name={product.productName}
                 Price={formatPrice(product.productPrice)}
               />
-            ))}
+            )) ?? []}
       </div>
       <Button
         className="md:w-fit mx-auto"

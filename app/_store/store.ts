@@ -120,6 +120,7 @@ interface storeState {
   clearCart: () => void;
   createOrder: (order: Order) => Promise<Order>;
   fetchUserOrders: (email: string) => Promise<Order[]>;
+  searchProducts: (searchTerm: string) => Promise<Product[]>;
 }
 
 const useStore = create<storeState>()(
@@ -220,6 +221,7 @@ const useStore = create<storeState>()(
             productImage {
               url
             }
+            id
             productName
             productPrice
             productSlug
@@ -616,6 +618,39 @@ const useStore = create<storeState>()(
           }
         );
         return productsConnection;
+      },
+
+      searchProducts: async (searchTerm: string) => {
+        const { products } = await request<{ products: Product[] }>(
+          MASTER_URL,
+          gql`
+            query MyQuery($searchTerm: String!) {
+              products(
+                where: {
+                  OR: [
+                    {productName_contains: $searchTerm}
+                    {productSlug_contains: $searchTerm}
+                    {productDescription_contains: $searchTerm}
+                    {category_some: { categorySlug_contains: $searchTerm }}
+                  ]
+                }
+                  first: 10
+              ) {
+                id
+                productName
+                productSlug
+                productImage {
+                  url
+                }
+                category {
+                  categorySlug
+                }
+              }
+            }
+          `,
+          { searchTerm }
+        );
+        return products;
       },
     }),
     {
