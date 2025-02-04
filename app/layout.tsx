@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-import NavigationBar from "./_contentBlocks/NavigationBar";
-import Footer from "./_contentBlocks/Footer";
+import { Analytics } from '@vercel/analytics/next';
 import { TanstackQueryProvider } from "./_providers/TanstackQueryProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 
@@ -33,6 +32,7 @@ export default function RootLayout({
         <body>
           <TanstackQueryProvider>
             <main>{children}</main>
+            <Analytics />
             <Toaster />
           </TanstackQueryProvider>
         </body>
