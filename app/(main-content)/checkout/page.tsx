@@ -28,6 +28,14 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { counties } from "@/lib/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Order {
   id?: string;
@@ -78,7 +86,9 @@ const PersonalSchema = z.object({
 });
 
 const ShippingSchema = z.object({
-  county: z.string().nonempty({ message: "County is required" }),
+  county: z.string().refine((value) => counties.some((c) => c.name === value), {
+    message: "Please select a valid county from the list",
+  }),
   city: z.string().nonempty({ message: "City is required" }),
   district: z.string().nonempty({ message: "District is required" }),
   street: z.string().nonempty({ message: "Street is required" }),
@@ -114,17 +124,32 @@ const CheckoutPage = () => {
   4. Increment shipping fee by the rate of 2.5% of the total price for every 1000
   5 If fee has a decimal, round it up to the nearest whole number
   */
-  const shippingFee = (total: number) => {
-    if (total < 1000) {
-      return 200;
-    } else {
-      const fee = 200 + (total - 1000) * 0.105;
-      return Math.ceil(fee);
+
+  const calculateShippingFee = (total: number, county: string) => {
+    // Find the rating for the selected county, default to 1 (Nairobi) if not found
+    const rating = counties.find((c) => c.name === county)?.rating ?? 1;
+
+    // Calculate the increment rate based on the county's rating
+    const baseRate = 2.5; // Base rate for Nairobi
+    const rateIncrement = 0.1; // Additional rate per rating point
+    const incrementRate = baseRate + rateIncrement * (rating - 1);
+
+    // Calculate the number of thousands in the total amount
+    const numberOfThousands = Math.floor(total / 1000);
+
+    // Calculate the shipping fee
+    let fee = 200; // Minimum shipping fee
+    if (numberOfThousands > 0) {
+      fee += (numberOfThousands * (incrementRate * 1000)) / 100;
     }
+
+    // Round up the fee and cap it at the maximum allowed fee
+    const maximumFee = 3000;
+    return Math.min(Math.ceil(fee), maximumFee);
   };
 
-  const orderTotal = (total: number) => {
-    return formatPrice(total + shippingFee(total));
+  const orderTotal = (total: number, county: string) => {
+    return formatPrice(total + calculateShippingFee(total, county));
   };
 
   const router = useRouter();
@@ -153,7 +178,7 @@ const CheckoutPage = () => {
         ...orderData,
 
         itemTotal: total,
-        shippingFee: shippingFee(total), // Replace with actual shipping calculation
+        shippingFee: calculateShippingFee(total, formData.shipping.county), // Replace with actual shipping calculation
         orderTotal: 0, // Will be calculated below
         orderItem: cartItem.map((item) => ({
           quantity: item.selectedQuantity,
@@ -228,8 +253,8 @@ const CheckoutPage = () => {
       district: formData.shipping.district,
       street: formData.shipping.street,
       itemTotal: total,
-      shippingFee: shippingFee(total),
-      orderTotal: total + shippingFee(total),
+      shippingFee: calculateShippingFee(total, formData.shipping.county),
+      orderTotal: total + calculateShippingFee(total, formData.shipping.county),
       mpesaCode: data.mpesaCode,
       orderItem: cartItem.map((item) => ({
         quantity: item.selectedQuantity,
@@ -397,7 +422,25 @@ const CheckoutPage = () => {
                           <FormItem>
                             <FormLabel htmlFor="county">County</FormLabel>
                             <FormControl>
-                              <Input id="county" {...field} />
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                defaultValue={field.value}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select County" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {counties.map((county) => (
+                                    <SelectItem
+                                      key={county.name}
+                                      value={county.name}
+                                    >
+                                      {county.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -471,20 +514,23 @@ const CheckoutPage = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <p>Shipping Fee</p>
-                      <p>Kes {shippingFee(total)}</p>
+                      <p>
+                        Kes{" "}
+                        {calculateShippingFee(total, formData.shipping.county)}
+                      </p>
                     </div>
                     <div className="flex items-center justify-between">
                       <p>Total</p>
-                      <p>Kes {orderTotal(total)}</p>
+                      <p>Kes {orderTotal(total, formData.shipping.county)}</p>
                     </div>
                   </div>
 
                   <div className="">
                     {/* Provide mpessa paybill details and instructions */}
                     <p className="text-sm text-gray-600">
-                      Pay Kes {orderTotal(total)} to Paybill 123456 Account
-                      123456 then enter the Mpesa code below to complete your
-                      order
+                      Pay Kes {orderTotal(total, formData.shipping.county)} to
+                      Paybill 123456 Account 123456 then enter the Mpesa code
+                      below to complete your order
                     </p>
                   </div>
                   <Form {...paymentForm}>
