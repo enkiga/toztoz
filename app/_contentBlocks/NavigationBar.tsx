@@ -90,7 +90,7 @@ const NavigationBar = () => {
         {/* Logo */}
         <div className="">
           <Link href="/" className="font-semibold text-2xl">
-            Toztoz
+            <Image src="/TozTozBanner.png" alt="logo" width={100} height={50} />
           </Link>
         </div>
         {/* Hyperlinks, Search, Cart & User Profile */}
