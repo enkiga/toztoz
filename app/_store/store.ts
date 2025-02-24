@@ -81,6 +81,13 @@ interface OrderItem {
   product: Product;
 }
 
+interface Document {
+  id: string;
+  title: string;
+  content: string;
+  docSlug: string;
+}
+
 interface storeState {
   products: Product[];
   categories: Category[];
@@ -121,6 +128,8 @@ interface storeState {
   createOrder: (order: Order) => Promise<Order>;
   fetchUserOrders: (email: string) => Promise<Order[]>;
   searchProducts: (searchTerm: string) => Promise<Product[]>;
+  getDocuments: () => Promise<Document[]>;
+  getDocumentBySlug: (docSlug: string) => Promise<Document>;
 }
 
 const useStore = create<storeState>()(
@@ -658,6 +667,37 @@ const useStore = create<storeState>()(
           { searchTerm }
         );
         return products;
+      },
+
+      getDocuments: async () => {
+        const { documents } = await request<{ documents: Document[] }>(
+          MASTER_URL,
+          gql`
+            query MyQuery {
+              documents {
+                title
+                docSlug
+              }
+            }
+          `
+        );
+        return documents;
+      },
+
+      getDocumentBySlug: async (docSlug: string) => {
+        const { document } = await request<{ document: Document }>(
+          MASTER_URL,
+          gql`
+            query MyQuery {
+              document(where: { docSlug: "${docSlug}" }) {
+                docSlug
+                title
+                content
+              }
+            }
+          `
+        );
+        return document;
       },
     }),
     {

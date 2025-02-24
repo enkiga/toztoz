@@ -15,6 +15,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import { toast } from "sonner";
 import { useStore } from "@/app/_store/store";
 import { useQuery } from "@tanstack/react-query";
@@ -63,7 +68,7 @@ const ProductPage = () => {
 
   const md = new markdownit();
   const description = data
-    ? md.renderInline(data.productDescription)
+    ? md.render(data.productDescription)
     : "No Description Provided";
 
   // Get Price then convert to string while adding the comma separator
@@ -134,11 +139,12 @@ const ProductPage = () => {
       setCartQuantity(1);
       toast("Added to cart", {
         description: `${data.productName} has been added to cart`,
-      })
+      });
     }
   };
 
-  // create a boolean to check if the product is in the cart
+  // useState for image carousel
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   return (
     <section className="w-full min-h-screen pt-20">
@@ -151,15 +157,60 @@ const ProductPage = () => {
             {/* Product Image */}
             <div className="w-full md:w-1/2">
               <Image
-                src={data.productImage[0].url}
+                src={data.productImage[currentImageIndex].url}
                 alt="Product Image"
                 width={1000}
                 height={1000}
-                className="object-cover object-center w-full"
+                className="object-cover object-center w-full h-[500px] rounded-md shadow-md"
                 priority
               />
-            </div>
 
+              {data.productImage.length > 1 && (
+                <div className="mt-4">
+                  <div className="w-full text-right my-2 mr-2">
+                    <p className="text-xs font-semibold text-gray-500">
+                      {currentImageIndex + 1}/{data.productImage.length}
+                    </p>
+                  </div>
+
+                  <Carousel
+                    opts={{
+                      align: "center",
+                    }}
+                    className="w-full"
+                  >
+                    <CarouselContent className="flex gap-2 -ml-1">
+                      {data.productImage.map((image, index) => (
+                        <CarouselItem
+                          key={index}
+                          className={`basis-1/2 md:basis-1/4 w-[100px] h-[100px] border rounded-md pl-1 ${
+                            index === currentImageIndex
+                              ? "border-purple-400"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <div
+                            className="w-full h-full object-cover cursor-pointer"
+                            onClick={() => setCurrentImageIndex(index)}
+                          >
+                            <Image
+                              src={image.url}
+                              alt="Product Image"
+                              width={1000}
+                              height={1000}
+                              className="object-cover object-center rounded-md w-full h-full"
+                              priority
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
+
+                  {/* // Show index of the image ie. 1/4 */}
+                </div>
+              )}
+            </div>
             {/* Details, Quantity  & Buttons */}
             <div className="w-full md:w-1/2 flex flex-col items-start py-5 md:p-10">
               {/* Product Name & Price */}
@@ -172,7 +223,10 @@ const ProductPage = () => {
               {/* Product Description */}
               <div className="pt-4 w-full">
                 <h1 className="text-lg">Product Description</h1>
-                <p className="mt-2">{description}</p>
+                <div
+                  className="mt-4"
+                  dangerouslySetInnerHTML={{ __html: description }}
+                />
               </div>
 
               {/* Quantity */}

@@ -18,7 +18,7 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 import { useStore } from "@/app/_store/store";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
