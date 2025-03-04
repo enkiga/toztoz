@@ -72,7 +72,7 @@ const ProductListing = ({ title, count }: Props) => {
       <Button
         className="md:w-fit mx-auto"
         size="lg"
-        onClick={() => router.push("/all-products")}
+        onClick={() => router.push("/shop/all-products")}
       >
         Explore more products
       </Button>

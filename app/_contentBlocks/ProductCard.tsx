@@ -25,7 +25,7 @@ const ProductCard = ({ Img, Name, Price, category, slug }: Props) => {
     console.log("Clicked");
 
     // Redirect to the product detail page
-    router.push(`/${categorySlug}/${productSlug}`);
+    router.push(`/shop/${categorySlug}/product/${productSlug}`);
   };
   return (
     <div

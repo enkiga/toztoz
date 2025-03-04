@@ -102,14 +102,14 @@ const NavigationBar = () => {
                 <NavigationMenuContent>
                   <ul className="w-[200px] flex flex-col bg-background">
                     <li className="px-4 py-2 hover:bg-gray-200">
-                      <Link href="/all-products">All Products</Link>
+                      <Link href="/shp/all-products">All Products</Link>
                     </li>
                     {query.data?.map((category) => (
                       <li
                         key={category.id}
                         className="px-4 py-2 hover:bg-gray-200"
                       >
-                        <Link href={`/${category.categorySlug}`}>
+                        <Link href={`/shop/${category.categorySlug}`}>
                           {category.categoryName}
                         </Link>
                       </li>
@@ -128,6 +128,13 @@ const NavigationBar = () => {
                 <Link href="/contact" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Contact
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/career" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Join Us
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
@@ -331,16 +338,19 @@ const MobileNav = ({
           <DropdownMenuItem>
             <Link href="/contact">Contact</Link>
           </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/career">Join Us</Link>
+          </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Categories</DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuItem>
-                  <Link href="/all-products">All Products</Link>
+                  <Link href="/shop/all-products">All Products</Link>
                 </DropdownMenuItem>
                 {query.data?.map((category: Categories) => (
                   <DropdownMenuItem key={category.id}>
-                    <Link href={`/${category.categorySlug}`}>
+                    <Link href={`/shop/${category.categorySlug}`}>
                       {category.categoryName}
                     </Link>
                   </DropdownMenuItem>

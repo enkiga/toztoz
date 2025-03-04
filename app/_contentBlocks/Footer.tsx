@@ -47,12 +47,12 @@ const Footer = () => {
           <div className="w-2/3 flex flex-col items-start px-1">
             <h1 className="text-xl font-semibold underline mb-1">Categories</h1>
             <ul className="text-sm flex flex-wrap">
-              <li className="w-full md:w-1/2 px-1">
+              <li className="w-full md:w-1/2 py-1">
                 <Link href="/all-products">All Products</Link>
               </li>
               {query.data?.map((category) => (
-                <li key={category.id} className="w-full md:w-1/2 px-1">
-                  <Link href={`/${category.categorySlug}`}>
+                <li key={category.id} className="w-full md:w-1/2 py-1">
+                  <Link href={`/shop/${category.categorySlug}`}>
                     {category.categoryName}
                   </Link>
                 </li>
@@ -71,6 +71,9 @@ const Footer = () => {
               </li>
               <li>
                 <Link href="/contact">Contact Us</Link>
+              </li>
+              <li>
+                <Link href="/career">Join Us</Link>
               </li>
               {docData?.map((doc) => (
                 <li key={doc.title}>
