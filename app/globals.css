@@ -75,8 +75,6 @@ body {
   }
 }
 
-
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -86,16 +84,19 @@ body {
   }
 }
 
+.mdx {
+  @apply mt-4;
 
-h3 {
-  @apply text-2xl font-semibold my-6;
-}
-h4 {
-  @apply text-xl font-semibold my-5;
-}
-h5 {
-  @apply text-lg font-semibold;
-}
-h6 {
-  @apply font-semibold;
+  h3 {
+    @apply text-2xl font-semibold my-6;
+  }
+  h4 {
+    @apply text-xl font-semibold my-5;
+  }
+  h5 {
+    @apply text-lg font-semibold;
+  }
+  h6 {
+    @apply font-semibold;
+  }
 }

@@ -64,8 +64,9 @@ const Document = () => {
         <div>Loading...</div>
       ) : (
         <div className="w-11/12 mx-auto">
-          <h1 className="font-semibold text-3xl text-center underline">{data?.title}</h1>
-          <div className="my-4" dangerouslySetInnerHTML={{ __html: context }}/>
+          <h1 style={{fontSize: 30, fontWeight: 600, textAlign: "center", textDecoration: "underline" }}>{data?.title}</h1>
+          {/* "font-semibold text-3xl text-center underline" */}
+          <div className="mdx" dangerouslySetInnerHTML={{ __html: context }}/>
         </div>
       )}
     </div>

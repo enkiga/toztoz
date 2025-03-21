@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { format } from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -14,7 +15,9 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.graphassets.com",
       },
+      
     ],
+    formats: ["image/webp"],
   },
 };
 
