@@ -88,6 +88,14 @@ interface Document {
   docSlug: string;
 }
 
+interface Discount {
+  id: string;
+  name: string;
+  code: string;
+  offerPercentage: number;
+  userEmail: string;
+}
+
 interface storeState {
   products: Product[];
   categories: Category[];
@@ -130,6 +138,8 @@ interface storeState {
   searchProducts: (searchTerm: string) => Promise<Product[]>;
   getDocuments: () => Promise<Document[]>;
   getDocumentBySlug: (docSlug: string) => Promise<Document>;
+  getDiscounts: () => Promise<Discount[]>;
+  updateDiscount: (email: string, code: string) => Promise<Discount>;
 }
 
 const useStore = create<storeState>()(
@@ -698,6 +708,48 @@ const useStore = create<storeState>()(
           `
         );
         return document;
+      },
+
+      getDiscounts: async () => {
+        const { offers } = await request<{ offers: Discount[] }>(
+          MASTER_URL,
+          gql`
+            query MyQuery {
+              offers {
+                id
+                name
+                offerPercentage
+                userEmail
+                code
+              }
+            }
+          `
+        );
+        return offers;
+      },
+
+      updateDiscount: async (email: string, code: string) => {
+        const result = await request<{ updateOffer: Discount }>(
+          MASTER_URL,
+          gql`
+            mutation MyMutation($email: [String!], $code: String!) {
+              updateOffer(data: { userEmail: $email }, where: { code: $code }) {
+                id
+                name
+                code
+              }
+              publishManyOffersConnection {
+                edges {
+                  node {
+                    id
+                  }
+                }
+              }
+            }
+          `,
+          { email: [email], code } // Properly use variables instead of string interpolation
+        );
+        return result.updateOffer;
       },
     }),
     {

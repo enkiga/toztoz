@@ -102,7 +102,7 @@ const NavigationBar = () => {
                 <NavigationMenuContent>
                   <ul className="w-[200px] flex flex-col bg-background">
                     <li className="px-4 py-2 hover:bg-gray-200">
-                      <Link href="/shp/all-products">All Products</Link>
+                      <Link href="/shop/all-products">All Products</Link>
                     </li>
                     {query.data?.map((category) => (
                       <li
@@ -219,9 +219,11 @@ const Cart = () => {
     <Sheet>
       <SheetTrigger asChild>
         <div className="relative">
-          <p className="absolute -top-3 -right-2 text-xs bg-purple-700 text-white rounded-full px-1">
-            {cartItem.length}
-          </p>
+          {cartItem.length > 0 && (
+            <p className="absolute -top-3 -right-2 text-xs bg-purple-700 text-white rounded-full px-1 animate-pulse">
+              {cartItem.length}
+            </p>
+          )}
           <ShoppingBasketIcon size={16} />
         </div>
       </SheetTrigger>

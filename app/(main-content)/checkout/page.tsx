@@ -16,6 +16,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@clerk/nextjs";
 import { useStore } from "@/app/_store/store";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -72,6 +81,13 @@ interface Product {
   category: [{ categoryName: string; categorySlug: string }];
 }
 
+interface Discount {
+  id: string;
+  name: string;
+  code: string;
+  offerPercentage: number;
+  userEmail: string;
+}
 // Step 1: Split schema into individual step schemas
 const PersonalSchema = z.object({
   name: z
@@ -106,8 +122,9 @@ type FormData = {
 
 const CheckoutPage = () => {
   const { user } = useUser();
+  const queryClient = useQueryClient();
   // get cart items from store: if cart is empty, redirect to homepage with a message to add items to cart
-  const { cartItem, createOrder } = useStore();
+  const { cartItem, createOrder, getDiscounts, updateDiscount } = useStore();
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("en-US");
@@ -174,12 +191,18 @@ const CheckoutPage = () => {
   // Step 1: Create mutation with proper types
   const orderMutation = useMutation({
     mutationFn: async (orderData: Order) => {
+      // Calculate discounted values first
+      const discountedSubtotal = total - discountAmount;
+      const calculatedShipping = calculateShippingFee(
+        discountedSubtotal,
+        formData.shipping.county
+      );
       const orderPayload = {
         ...orderData,
 
-        itemTotal: total,
-        shippingFee: calculateShippingFee(total, formData.shipping.county), // Replace with actual shipping calculation
-        orderTotal: 0, // Will be calculated below
+        itemTotal: discountedSubtotal,
+        shippingFee: calculatedShipping,
+        orderTotal: discountedSubtotal + calculatedShipping,
         orderItem: cartItem.map((item) => ({
           quantity: item.selectedQuantity,
           product: {
@@ -201,9 +224,28 @@ const CheckoutPage = () => {
 
       return createOrder(orderPayload);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Clear cart on success
       useStore.getState().clearCart();
+
+      // update discount with user's email
+      if (appliedDiscount && email) {
+        try {
+          await updateDiscount(email, appliedDiscount.code);
+          // Invalidate discounts query to refresh data
+          await queryClient.invalidateQueries({
+            queryKey: ["discounts", email],
+          });
+        } catch (error) {
+          console.error("Discount update failed:", error);
+          toast.error("Discount usage tracking failed - contact support");
+        }
+      }
+      // Show success message
+      toast("Order submitted successfully", {
+        description: "Your order has been placed successfully.",
+      });
+
       router.push("/orders");
     },
     onError: (error) => {
@@ -244,6 +286,12 @@ const CheckoutPage = () => {
   };
 
   const handlePaymentSubmit = (data: z.infer<typeof PaymentSchema>) => {
+    const discountedSubtotal = total - discountAmount;
+    const calculatedShipping = calculateShippingFee(
+      discountedSubtotal,
+      formData.shipping.county
+    );
+
     const completeOrderData: Order = {
       customerName: formData.personal.name,
       customerEmail: formData.personal.email,
@@ -252,9 +300,9 @@ const CheckoutPage = () => {
       city: formData.shipping.city,
       district: formData.shipping.district,
       street: formData.shipping.street,
-      itemTotal: total,
-      shippingFee: calculateShippingFee(total, formData.shipping.county),
-      orderTotal: total + calculateShippingFee(total, formData.shipping.county),
+      itemTotal: discountedSubtotal,
+      shippingFee: calculatedShipping,
+      orderTotal: discountedSubtotal + calculatedShipping,
       mpesaCode: data.mpesaCode,
       orderItem: cartItem.map((item) => ({
         quantity: item.selectedQuantity,
@@ -274,6 +322,73 @@ const CheckoutPage = () => {
 
     orderMutation.mutate(completeOrderData);
   };
+
+  const [discountCodeInput, setDiscountCodeInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const email = user?.primaryEmailAddress
+    ? user.primaryEmailAddress.emailAddress
+    : null;
+
+  // Fetch discounts from the server
+  const { data: discounts, isLoading: isDiscountsLoading } = useQuery<
+    Discount[]
+  >({
+    queryKey: ["discounts", email],
+    queryFn: () => getDiscounts(),
+    enabled: !!email,
+    initialData: [],
+  });
+
+  const handleApplyDiscount = () => {
+    if (!email) {
+      toast.error(
+        "You must be logged in with a verified email to use discounts"
+      );
+      return;
+    }
+
+    if (!discountCodeInput) {
+      toast.error("Please enter a discount code");
+      return;
+    }
+
+    const discount = discounts?.find((d) => d.code === discountCodeInput);
+
+    if (!discount) {
+      toast.error("Invalid discount code");
+      setDiscountCodeInput("");
+      return;
+    }
+
+    // Check if the discount has already been used by the user
+    if (discount.userEmail?.includes(email)) {
+      // Use .includes() to check if the email exists in the array
+      setShowModal(true);
+      setDiscountCodeInput("");
+      return;
+    }
+
+    // Update discount with user's email
+    try {
+      setAppliedDiscount(discount);
+      toast.success(`Discount applied: ${discount.offerPercentage}% off`);
+    } catch (error) {
+      toast.error("Failed to apply discount");
+      setDiscountCodeInput("");
+    }
+  };
+
+  const discountAmount = appliedDiscount
+    ? (total * appliedDiscount.offerPercentage) / 100
+    : 0;
+
+  const shippingFee = calculateShippingFee(
+    total - discountAmount,
+    formData.shipping.county
+  );
+  const orderTotalValue = total - discountAmount + shippingFee;
 
   return (
     <>
@@ -512,25 +627,66 @@ const CheckoutPage = () => {
                       <p>Cart Total</p>
                       <p>Kes {formatPrice(total)}</p>
                     </div>
+
+                    {appliedDiscount && (
+                      <div className="flex items-center justify-between text-green-600">
+                        <p>Discount ({appliedDiscount.offerPercentage}%)</p>
+                        <p>- Kes {formatPrice(discountAmount)}</p>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between">
                       <p>Shipping Fee</p>
                       <p>
                         Kes{" "}
-                        {calculateShippingFee(total, formData.shipping.county)}
+                        {formatPrice(
+                          calculateShippingFee(
+                            total - discountAmount,
+                            formData.shipping.county
+                          )
+                        )}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between">
+
+                    <div className="flex items-center justify-between font-bold">
                       <p>Total</p>
-                      <p>Kes {orderTotal(total, formData.shipping.county)}</p>
+                      <p>Kes {formatPrice(orderTotalValue)}</p>
                     </div>
+                  </div>
+
+                  {/* Discount Code */}
+                  <div className="flex items-center justify-between border-b pb-5 gap-2">
+                    <Input
+                      placeholder="Enter Discount Code"
+                      value={discountCodeInput}
+                      onChange={(e) => setDiscountCodeInput(e.target.value)}
+                      disabled={!!appliedDiscount || isDiscountsLoading}
+                    />
+                    <Button
+                      variant="outline"
+                      className="w-fit"
+                      onClick={handleApplyDiscount}
+                      disabled={
+                        isDiscountsLoading ||
+                        !discountCodeInput ||
+                        !!appliedDiscount ||
+                        !email
+                      }
+                    >
+                      {isDiscountsLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Apply"
+                      )}
+                    </Button>
                   </div>
 
                   <div className="">
                     {/* Provide mpessa paybill details and instructions */}
                     <p className="text-sm text-gray-600">
-                      Pay Kes {orderTotal(total, formData.shipping.county)} to
-                      Paybill 123456 Account 123456 then enter the Mpesa code
-                      below to complete your order
+                      Pay Kes {formatPrice(orderTotalValue)} to Paybill 123456
+                      Account 123456 then enter the Mpesa code below to complete
+                      your order
                     </p>
                   </div>
                   <Form {...paymentForm}>
@@ -578,6 +734,27 @@ const CheckoutPage = () => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          <Dialog
+            open={showModal}
+            onOpenChange={(open) => {
+              if (!open) setDiscountCodeInput(""); // Clear input when modal closes
+              setShowModal(open);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Discount Already Used</DialogTitle>
+                <DialogDescription>
+                  This discount code has already been used with your account.
+                  Each discount code can only be used once per user.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button onClick={() => setShowModal(false)}>Close</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </section>
       )}
     </>
